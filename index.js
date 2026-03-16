@@ -16,11 +16,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan("dev"));
-
 app.use("/api/v1", express.static("public"));
 
-// import rootRouter from "./routes/root.routes.js";
-// app.use("/api/v1", rootRouter);
+
+// Root route
+import rootRouter from "./routes/root.routes.js";
+app.use("/api/v1", rootRouter);
 
 // Routes
 app.get("/api", (req, res) => {
