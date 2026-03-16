@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { createCardPayment } from "../controllers/card/cardController.js";
+import { createCreditCardPayment } from "../controllers/card/cardController.js";
 
 const cardRouter = Router();
 
-cardRouter.post("/create", createCardPayment);
+cardRouter.post("/create", createCreditCardPayment);
 
 export default cardRouter;

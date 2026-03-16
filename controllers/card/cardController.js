@@ -3,36 +3,57 @@ import axios from "axios";
 import { ApiResponse } from "../../utils/apiResponse.js";
 import { Msg } from "../../utils/responseMsg.js";
 
-export const createCardPayment = async (req, res) => {
+export const createCreditCardPayment = async (req, res) => {
   try {
-    const { amount, orderId } = req.body;
+    const {
+      amount,
+      email,
+      notify = true,
+    } = req.body;
 
-    console.log("api key", process.env.EUPAGO_API_KEY);
-
-    if (!amount || !orderId) {
-      return res.status(400).json({
-        message: "amount and orderId are required",
-      });
+    if (!amount || !email) {
+      return res.status(400).json(new ApiResponse(400, {}, Msg.AMOUNT_AND_EMAIL_REQUIRED));
     }
 
-    const response = await axios.post(
-      "https://sandbox.eupago.pt/api/v1.02/creditcard/create",
-      {
-        amount: amount,
-        identifier: orderId,
+    const options = {
+      method: "POST",
+      url: "https://sandbox.eupago.pt/api/v1.02/creditcard/create",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        Authorization: `ApiKey ${process.env.EUPAGO_API_KEY}`,
       },
-      {
-        headers: {
-          apikey: process.env.EUPAGO_API_KEY,
-          "Content-Type": "application/json",
+      data: {
+        payment: {
+          amount: {
+            currency: "EUR",
+            value: amount,
+          },
+          lang: "PT",
+          minutesFormUp: 1440,
+          identifier: "Test",
+          successUrl: "https://eupago.pt",
+          failUrl: "https://eupago.pt",
+          backUrl: "https://eupago.pt",
         },
-      }
-    );
+        customer: {
+          notify,
+          email,
+        },
+      },
+    };
 
-    return res.status(200).json(response.data);
+    const response = await axios.request(options);
+
+    return res.status(200).json({
+      success: true,
+      message: "Credit card payment created successfully",
+      data: response.data,
+    });
   } catch (error) {
     return res.status(500).json({
-      message: "Payment creation failed",
+      success: false,
+      message: "Failed to create credit card payment",
       error: error.response?.data || error.message,
     });
   }

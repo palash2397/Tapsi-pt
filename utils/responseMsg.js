@@ -33,4 +33,7 @@ export const Msg = {
   CUSTOMER_DELETE_SUCCESS: `Customer deleted successfully`,
 
 
+  AMOUNT_AND_EMAIL_REQUIRED: `Amount and email are required`,
+
+
 };
