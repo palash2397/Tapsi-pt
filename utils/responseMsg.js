@@ -36,4 +36,8 @@ export const Msg = {
   AMOUNT_AND_EMAIL_REQUIRED: `Amount and email are required`,
 
 
+  // Payment
+  CREDIT_CARD_PAYMENT_CREATED: `Credit card payment created successfully`,
+
+
 };

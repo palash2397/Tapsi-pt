@@ -45,11 +45,13 @@ export const createCreditCardPayment = async (req, res) => {
 
     const response = await axios.request(options);
 
-    return res.status(200).json({
-      success: true,
-      message: "Credit card payment created successfully",
-      data: response.data,
-    });
+    return res.status(200).json(new ApiResponse(200, response.data, Msg.CREDIT_CARD_PAYMENT_CREATED));
+
+    // return res.status(200).json({
+    //   success: true,
+    //   message: "Credit card payment created successfully",
+    //   data: response.data,
+    // });
   } catch (error) {
     return res.status(500).json({
       success: false,
