@@ -64,7 +64,7 @@ export const createMbWayPayment = async (req, res) => {
     }
 
     const response = await axios.post(
-      "https://sandbox.eupago.pt/api/v1.02/mbway/create",
+      `${process.env.EUPAGO_BASE_URL}/v1.02/mbway/create`,
       {
         payment: {
           amount: {
