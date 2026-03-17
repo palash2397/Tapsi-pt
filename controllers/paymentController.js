@@ -1,7 +1,7 @@
 import axios from "axios";
 
-import { ApiResponse } from "../../utils/apiResponse.js";
-import { Msg } from "../../utils/responseMsg.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { Msg } from "../utils/responseMsg.js";
 
 export const createCreditCardPayment = async (req, res) => {
   try {
@@ -53,3 +53,6 @@ export const createCreditCardPayment = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
   }
 };
+
+
+

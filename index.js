@@ -20,12 +20,12 @@ app.use("/api/v1", express.static("public"));
 
 
 // Root route
-import rootRouter from "./routes/root.routes.js";
-app.use("/api/v1", rootRouter);
+import indexRouter from "./routes/index.routes.js";
+app.use("/api/v1", indexRouter);
 
 // Routes
 app.get("/api", (req, res) => {
-  res.send("Welcome to College Nerd");
+  res.send("Welcome to tapsi API");
 });
 
 app.listen(PORT, () => {
