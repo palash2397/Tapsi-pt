@@ -4,5 +4,6 @@ import { createCreditCardPayment, createMbWayPayment } from "../controllers/paym
 const paymentRouter = Router();
 
 paymentRouter.post("/card/create", createCreditCardPayment);
+paymentRouter.post("/mbway/create", createMbWayPayment);
 
 export default paymentRouter;

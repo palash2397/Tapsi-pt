@@ -84,11 +84,9 @@ export const createMbWayPayment = async (req, res) => {
       }
     );
 
-    return res.status(200).json({
-      success: true,
-      message: "MB Way payment created successfully",
-      data: response.data,
-    });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, response.data, Msg.MB_WAY_PAYMENT_CREATED));
   } catch (error) {
     console.log(`MB Way payment creation failed: ${error.message}`);
     return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
