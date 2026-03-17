@@ -54,13 +54,14 @@ export const createCreditCardPayment = async (req, res) => {
   }
 };
 
-
 export const createMbWayPayment = async (req, res) => {
   try {
     const { amount, customerPhone, countryCode } = req.body;
 
     if (!amount || !customerPhone || !countryCode) {
-      return res.status(400).json(new ApiResponse(400, {}, Msg.AMOUNT_AND_EMAIL_REQUIRED));
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, Msg.AMOUNT_AND_EMAIL_REQUIRED));
     }
 
     const response = await axios.post(
@@ -73,6 +74,7 @@ export const createMbWayPayment = async (req, res) => {
           },
           customerPhone,
           countryCode,
+          callbackUrl: `${process.env.BASE_URL}/mbway/callback`,
         },
       },
       {
@@ -81,7 +83,7 @@ export const createMbWayPayment = async (req, res) => {
           "content-type": "application/json",
           Authorization: `ApiKey ${process.env.EUPAGO_API_KEY}`,
         },
-      }
+      },
     );
 
     return res
@@ -94,3 +96,29 @@ export const createMbWayPayment = async (req, res) => {
 };
 
 
+export const mbWayCallback = async (req, res) => {
+  try {
+    console.log('MB Way Callback Received:', req.body);
+
+    const { transactionStatus, transactionID, reference, identifier } = req.body;
+
+    if (transactionStatus === 'Success') {
+      // ✅ Payment confirmed — update your DB
+      // await OrderModel.updateOne(
+      //   { identifier },
+      //   { status: 'PAID', transactionID }
+      // );
+      console.log(`Payment SUCCESS for order: ${identifier}`);
+    } else {
+      // ❌ Payment failed/expired
+      console.log(`Payment FAILED for order: ${identifier}`);
+    }
+
+    // Always return 200 to euPago
+    return res.status(200).json({ received: true });
+
+  } catch (error) {
+    console.log(`Callback error: ${error.message}`);
+    return res.status(500).json({ received: false });
+  }
+};
