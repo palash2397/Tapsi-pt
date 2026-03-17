@@ -60,10 +60,7 @@ export const createMbWayPayment = async (req, res) => {
     const { amount, customerPhone, countryCode } = req.body;
 
     if (!amount || !customerPhone || !countryCode) {
-      return res.status(400).json({
-        success: false,
-        message: "amount, customerPhone, and countryCode are required",
-      });
+      return res.status(400).json(new ApiResponse(400, {}, Msg.AMOUNT_AND_EMAIL_REQUIRED));
     }
 
     const response = await axios.post(
