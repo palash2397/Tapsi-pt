@@ -54,6 +54,8 @@ export const createPayment = async (req, res) => {
       },
     });
 
+    console.log("data ------------>", data);
+
     return res.status(200).json({
       transactionId: data.transactionID,
       formContext: data.formContext,
@@ -74,5 +76,52 @@ export const createPayment = async (req, res) => {
       message: sibsError?.returnStatus?.statusMsg || error.message,
       code: sibsError?.returnStatus?.returnCode || "UNKNOWN_ERROR",
     });
+  }
+};
+
+export const openCheckoutPage = async (req, res) => {
+  try {
+    const {transactionId, transactionSignature, formContext } = req.body;
+
+    // const payment = await PaymentModel.findOne({ transactionId });
+
+    // if (!payment) {
+    //   return res.status(404).send("Payment not found");
+    // }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>SIBS Checkout</title>
+          <script src="https://spg.qly.sibs.pt/assets/js/widget.js"></script>
+        </head>
+        <body>
+          <div id="payment-container"></div>
+
+          <script>
+            var checkout = new SibsCheckout({
+              transactionSignature: "${transactionSignature}",
+              formContext: "${formContext}",
+              containerId: "payment-container",
+              onSuccess: function(response) {
+                window.location.href = "https://yourdomain.com/payment-success?transactionId=${transactionId}";
+              },
+              onError: function(error) {
+                window.location.href = "https://yourdomain.com/payment-failed?transactionId=${transactionId}";
+              }
+            });
+
+            checkout.init();
+          </script>
+        </body>
+      </html>
+    `;
+
+    res.send(html);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Checkout page error");
   }
 };
