@@ -3,21 +3,14 @@ import morgan from "morgan";
 
 import "dotenv/config.js";
 
-
-
-
 const app = express();
 const PORT = process.env.PORT;
-
-
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan("dev"));
-app.use("/api/v1", express.static("public"));
-
 
 // Root route
 import indexRouter from "./routes/index.routes.js";

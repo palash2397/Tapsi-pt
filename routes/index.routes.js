@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { createCreditCardPayment, createMbWayPayment } from "../controllers/paymentController.js";
+import paymentRouter from "./payment.routes.js";
 
-const paymentRouter = Router();
+const rootRouter = Router();
 
-paymentRouter.post("/card/create", createCreditCardPayment);
-paymentRouter.post("/mbway/create", createMbWayPayment);
+rootRouter.use("/payment", paymentRouter);
 
-export default paymentRouter;
+export default rootRouter;
