@@ -1,0 +1,39 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Create ENV File
+        run: |
+          touch .env
+          echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > .env
+          chmod 600 .env
+          ls -lah .env
+
+      - name: Restart PM2 Service
+        run: |
+          pm2 delete sibs-gateway || true
+          pm2 start index.js --name sibs-gateway
+          pm2 save
