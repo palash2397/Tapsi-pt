@@ -57,7 +57,7 @@ export const createPayment = async (req, res) => {
       formContext: data.formContext,
       transactionSignature: data.transactionSignature,
       paymentMethodList: data.paymentMethodList,
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
     });
   } catch (error) {
     const status = error.response?.status || 500;
@@ -84,12 +84,14 @@ export const paymentStatus = async (req, res) => {
       },
     );
 
+    console.log("[SIBS getPaymentStatus data]", data);
+
     return res.status(200).json({
       transactionId,
-      status: data.paymentStatus, // "Success", "Declined", "Pending"
-      returnCode: data.returnStatus?.returnCode, // "000" = success
+      status: data.paymentStatus, // "Success" or "Declined"
+      returnCode: data.returnStatus?.returnCode, // "000" = success, anything else = failed
       statusMsg: data.returnStatus?.statusMsg,
-      amount: data.transaction?.amount,
+      description: data.returnStatus?.statusDescription,
     });
   } catch (error) {
     const status = error.response?.status || 500;
@@ -125,7 +127,7 @@ export const getPaymentPage = async (req, res) => {
       paymentMethodList: ["CARD", "MBWAY"],
       amount: { value: Number(amount), currency },
       language: "en",
-      redirectUrl: `${process.env.BASE_URL}/payment/sibs/result?transactionId=${transactionId}`,
+      redirectUrl: `${process.env.BASE_URL}/payment/result?transactionId=${transactionId}`,
     });
 
     const html = `
@@ -158,7 +160,6 @@ export const getPaymentPage = async (req, res) => {
     return res.status(500).send("Failed to load payment page");
   }
 };
-
 
 export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;

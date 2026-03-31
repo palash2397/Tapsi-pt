@@ -8,9 +8,9 @@ import {
 
 const paymentRouter = Router();
 
-paymentRouter.post("/sibs/create", createPayment);
-paymentRouter.get("/sibs/status/:transactionId", paymentStatus);
-paymentRouter.get("/sibs/page", getPaymentPage);
-paymentRouter.get("/sibs/result", paymentResult);
+paymentRouter.post("/create", createPayment);
+paymentRouter.get("/status/:transactionId", paymentStatus);
+paymentRouter.get("/page", getPaymentPage);
+paymentRouter.get("/result", paymentResult);
 
 export default paymentRouter;
