@@ -115,3 +115,35 @@ export const paymentStatus = async (req, res) => {
     });
   }
 };
+
+
+
+export const getPaymentPage = async (req, res) => {
+  const { transactionId, formContext, amount, currency = "EUR" } = req.query;
+
+  const formConfig = JSON.stringify({
+    paymentMethodList: ["CARD", "MBWAY"],
+    amount: { value: Number(amount), currency },
+    language: "en",
+    redirectUrl: `${process.env.APP_URL}/api/v1/payment/sibs/result?transactionId=${transactionId}`,
+  });
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://api.qly.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
+      </head>
+      <body>
+        <form
+          class="paymentSPG"
+          spg-context="${formContext}"
+          spg-config='${formConfig}'
+        ></form>
+      </body>
+    </html>
+  `;
+
+  res.send(html);
+};
