@@ -7,8 +7,6 @@ export const createPayment = async (req, res) => {
     const { amount, currency, description, customerName, customerEmail } =
       req.body ?? {};
 
-    console.log("req.body ------------>", req.body);
-
     const payload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
@@ -34,7 +32,7 @@ export const createPayment = async (req, res) => {
       info: {
         deviceInfo: {
           browserAcceptHeader: req.headers["accept"] || "text/html",
-          browserJavaEnabled: "false", // ← string
+          browserJavaEnabled: "false",
           browserLanguage:
             req.headers["accept-language"]?.split(",")[0] || "en",
           browserColorDepth: "24",
@@ -54,27 +52,19 @@ export const createPayment = async (req, res) => {
       },
     });
 
-    console.log("data ------------>", data);
-
     return res.status(200).json({
       transactionId: data.transactionID,
       formContext: data.formContext,
       transactionSignature: data.transactionSignature,
       paymentMethodList: data.paymentMethodList,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
     });
   } catch (error) {
     const status = error.response?.status || 500;
-    const sibsError = error.response?.data;
-
-    console.error(
-      "[SIBS createPayment error]",
-      status,
-      sibsError || error.message,
-    );
-
+    console.error("[SIBS createPayment error]", status, error.response?.data);
     return res.status(status).json({
-      message: sibsError?.returnStatus?.statusMsg || error.message,
-      code: sibsError?.returnStatus?.returnCode || "UNKNOWN_ERROR",
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
     });
   }
 };
@@ -84,7 +74,7 @@ export const paymentStatus = async (req, res) => {
     const { transactionId } = req.params;
 
     const { data } = await axios.get(
-      `${process.env.SIBS_BASE_URL}/sibs/spg/v2/payments/${transactionId}/status`,
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/status`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
@@ -116,34 +106,58 @@ export const paymentStatus = async (req, res) => {
   }
 };
 
-
-
 export const getPaymentPage = async (req, res) => {
-  const { transactionId, formContext, amount, currency = "EUR" } = req.query;
+  try {
+    const {
+      transactionId,
+      formContext: encodedContext,
+      amount = 10,
+      currency = "EUR",
+    } = req.query;
 
-  const formConfig = JSON.stringify({
-    paymentMethodList: ["CARD", "MBWAY"],
-    amount: { value: Number(amount), currency },
-    language: "en",
-    redirectUrl: `${process.env.APP_URL}/api/v1/payment/sibs/result?transactionId=${transactionId}`,
-  });
+    if (!transactionId || !encodedContext) {
+      return res.status(400).send("Missing transactionId or formContext");
+    }
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://api.qly.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
-      </head>
-      <body>
-        <form
-          class="paymentSPG"
-          spg-context="${formContext}"
-          spg-config='${formConfig}'
-        ></form>
-      </body>
-    </html>
-  `;
+    const formContext = decodeURIComponent(encodedContext);
 
-  res.send(html);
+    const formConfig = JSON.stringify({
+      paymentMethodList: ["CARD", "MBWAY"],
+      amount: { value: Number(amount), currency },
+      language: "en",
+      redirectUrl: `${process.env.BASE_URL}/payment/sibs/result?transactionId=${transactionId}`,
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+            .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <form
+              class="paymentSPG"
+              spg-context="${formContext}"
+              spg-config='${formConfig}'
+            ></form>
+          </div>
+          <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+        </body>
+      </html>
+    `;
+
+    return res.send(html);
+  } catch (error) {
+    console.error("[SIBS getPaymentPage error]", error.message);
+    return res.status(500).send("Failed to load payment page");
+  }
 };
+
+
+
