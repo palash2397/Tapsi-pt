@@ -34,5 +34,6 @@ jobs:
 
       - name: Restart PM2 Service
         run: |
-          pm2 restart sibs-gateway || pm2 start index.js --name sibs-gateway
+          pm2 delete sibs-gateway || true
+          pm2 start index.js --name sibs-gateway
           pm2 save
