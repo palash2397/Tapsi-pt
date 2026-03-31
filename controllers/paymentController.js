@@ -79,49 +79,39 @@ export const createPayment = async (req, res) => {
   }
 };
 
-export const openCheckoutPage = async (req, res) => {
+export const paymentStatus = async (req, res) => {
   try {
-    const {transactionId, transactionSignature, formContext } = req.body;
+    const { transactionId } = req.params;
 
-    // const payment = await PaymentModel.findOne({ transactionId });
+    const { data } = await axios.get(
+      `${process.env.SIBS_BASE_URL}/sibs/spg/v2/payments/${transactionId}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
-    // if (!payment) {
-    //   return res.status(404).send("Payment not found");
-    // }
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <title>SIBS Checkout</title>
-          <script src="https://spg.qly.sibs.pt/assets/js/widget.js"></script>
-        </head>
-        <body>
-          <div id="payment-container"></div>
-
-          <script>
-            var checkout = new SibsCheckout({
-              transactionSignature: "${transactionSignature}",
-              formContext: "${formContext}",
-              containerId: "payment-container",
-              onSuccess: function(response) {
-                window.location.href = "https://yourdomain.com/payment-success?transactionId=${transactionId}";
-              },
-              onError: function(error) {
-                window.location.href = "https://yourdomain.com/payment-failed?transactionId=${transactionId}";
-              }
-            });
-
-            checkout.init();
-          </script>
-        </body>
-      </html>
-    `;
-
-    res.send(html);
+    return res.status(200).json({
+      transactionId,
+      status: data.paymentStatus, // "Success", "Declined", "Pending"
+      returnCode: data.returnStatus?.returnCode, // "000" = success
+      statusMsg: data.returnStatus?.statusMsg,
+      amount: data.transaction?.amount,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Checkout page error");
+    const status = error.response?.status || 500;
+    console.error(
+      "[SIBS getPaymentStatus error]",
+      status,
+      error.response?.data,
+    );
+
+    return res.status(status).json({
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
+    });
   }
 };
