@@ -83,7 +83,7 @@ export const paymentStatus = async (req, res) => {
       },
     );
 
-    // console.log("[SIBS getPaymentStatus data]", data);
+    console.log("[SIBS getPaymentStatus data]", data);
 
     return res.status(200).json({
       transactionId,
