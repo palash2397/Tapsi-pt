@@ -196,7 +196,7 @@ export const getPaymentPage = async (req, res) => {
       paymentMethodList, // ← dynamic now
       amount: { value: Number(amount), currency },
       language: "en",
-      redirectUrl: `${process.env.BASE_URL}/payment/sibs/result?transactionId=${transactionId}`,
+      redirectUrl: `${process.env.BASE_URL}/payment/result?transactionId=${transactionId}`,
     });
 
     const html = `
