@@ -37,8 +37,7 @@ export const Msg = {
 
 
   // Payment
-  CREDIT_CARD_PAYMENT_CREATED: `Credit card payment created successfully`,
-  MB_WAY_PAYMENT_CREATED: `MB Way payment created successfully`,
+  PAYMENT_CREATED_SUCCESSFULLY: `Payment created successfully`,
 
 
 };
