@@ -267,7 +267,7 @@ export const payWithSavedCard = async (req, res) => {
       token,
       type,
       email,
-      amount,
+      amount = 10,
       currency = "EUR",
     } = req.body;
 
