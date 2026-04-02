@@ -218,11 +218,12 @@ export const getPaymentPage = async (req, res) => {
               spg-config='${formConfig}'
             ></form>
           </div>
-          <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+        // Live
+<script src="https://api.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
         </body>
       </html>
     `;
-
+  // <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
     return res.send(html);
   } catch (error) {
     console.error("[SIBS getPaymentPage error]", error.message);
