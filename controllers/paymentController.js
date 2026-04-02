@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Msg } from "../utils/responseMsg.js";
-import {ApiResponse} from "../utils/ApiResponse.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const createPayment = async (req, res) => {
   try {
@@ -84,10 +84,18 @@ export const createPayment = async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createPayment error]", status, error.response?.data);
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
-    });
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {
+          message:
+            error.response?.data?.returnStatus?.statusMsg || error.message,
+          code:
+            error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
+        },
+        Msg.SERVER_ERROR,
+      ),
+    );
   }
 };
 
