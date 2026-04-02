@@ -120,58 +120,59 @@ export const paymentStatus = async (req, res) => {
   }
 };
 
-export const getPaymentPage = async (req, res) => {
-  try {
-    const {
-      transactionId,
-      formContext: encodedContext,
-      amount = 10,
-      currency = "EUR",
-    } = req.query;
+// export const getPaymentPage = async (req, res) => {
+//   try {
+//     const {
+//       transactionId,
+//       formContext: encodedContext,
+//       amount = 10,
+//       currency = "EUR",
+//     } = req.query;
 
-    if (!transactionId || !encodedContext) {
-      return res.status(400).send("Missing transactionId or formContext");
-    }
+//     if (!transactionId || !encodedContext) {
+//       return res.status(400).send("Missing transactionId or formContext");
+//     }
 
-    const formContext = decodeURIComponent(encodedContext);
+//     const formContext = decodeURIComponent(encodedContext);
 
-    const formConfig = JSON.stringify({
-      paymentMethodList: ["CARD", "MBWAY"],
-      amount: { value: Number(amount), currency },
-      language: "en",
-      redirectUrl: `${process.env.BASE_URL}/payment/result?transactionId=${transactionId}`,
-    });
+//     const formConfig = JSON.stringify({
+//       paymentMethodList: ["CARD", "MBWAY"],
+//       amount: { value: Number(amount), currency },
+//       language: "en",
+//       redirectUrl: `${process.env.BASE_URL}/payment/result?transactionId=${transactionId}`,
+//     });
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-            .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <form
-              class="paymentSPG"
-              spg-context="${formContext}"
-              spg-config='${formConfig}'
-            ></form>
-          </div>
-          <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
-        </body>
-      </html>
-    `;
+//     const html = `
+//       <!DOCTYPE html>
+//       <html>
+//         <head>
+//           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//           <style>
+//             * { margin: 0; padding: 0; box-sizing: border-box; }
+//             body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+//             .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+//           </style>
+//         </head>
+//         <body>
+//           <div class="container">
+//             <form
+//               class="paymentSPG"
+//               spg-context="${formContext}"
+//               spg-config='${formConfig}'
+//             ></form>
+//           </div>
+//           <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+//         </body>
+//       </html>
+//     `;
 
-    return res.send(html);
-  } catch (error) {
-    console.error("[SIBS getPaymentPage error]", error.message);
-    return res.status(500).send("Failed to load payment page");
-  }
-};
+//     return res.send(html);
+//   } catch (error) {
+//     console.error("[SIBS getPaymentPage error]", error.message);
+//     return res.status(500).send("Failed to load payment page");
+//   }
+// };
+
 
 export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;
