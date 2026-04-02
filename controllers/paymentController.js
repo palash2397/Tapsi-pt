@@ -215,7 +215,6 @@ export const payWithSavedCard = async (req, res) => {
       currency = "EUR",
     } = req.body;
 
-
     const checkoutPayload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
@@ -255,7 +254,7 @@ export const payWithSavedCard = async (req, res) => {
       }
     );
 
-    // 3. Show mini widget (only CVV needed)
+  
     return res.status(200).json({
       transactionId: checkoutData.transactionID,
       transactionSignature: checkoutData.transactionSignature,
