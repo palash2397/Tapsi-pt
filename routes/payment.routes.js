@@ -4,7 +4,8 @@ import {
   paymentStatus,
   getPaymentPage,
   paymentResult,
-  payWithSavedCard
+  payWithSavedCard,
+  refundPayment
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -14,5 +15,6 @@ paymentRouter.get("/status/:transactionId", paymentStatus);
 paymentRouter.get("/page", getPaymentPage);
 paymentRouter.get("/result", paymentResult);
 paymentRouter.post("/pay/saved/card", payWithSavedCard);
+paymentRouter.post("/refund", refundPayment);
 
 export default paymentRouter;
