@@ -57,6 +57,8 @@ export const createPayment = async (req, res) => {
       },
     });
 
+    console.log("[SIBS createPayment data]", data);
+
     return res.status(200).json({
       transactionId: data.transactionID,
       transactionSignature: data.transactionSignature,
@@ -89,7 +91,8 @@ export const paymentStatus = async (req, res) => {
       },
     );
 
-    console.log("[SIBS getPaymentStatus data]", data);
+    // console.log("[SIBS getPaymentStatus data]", data);
+    console.log("[SIBS getPaymentStatus data]", JSON.stringify(data, null, 2));
 
     return res.status(200).json({
       transactionId,
