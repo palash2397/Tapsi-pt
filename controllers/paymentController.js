@@ -121,14 +121,14 @@ export const paymentStatus = async (req, res) => {
       new ApiResponse(
         200,
         {
-      transactionId,
-      status: data.paymentStatus, // "Success", "Pending", "Declined"
-      returnCode: data.returnStatus?.statusCode,
-      transactionStatusCode: data.transactionStatusCode,
-      transactionStatusDescription: data.transactionStatusDescription,
-      amount: data.amount,
-      paymentMethod: data.paymentMethod,
-      savedCard: data.token ? data.token : null,
+          transactionId,
+          status: data.paymentStatus, // "Success", "Pending", "Declined"
+          returnCode: data.returnStatus?.statusCode,
+          transactionStatusCode: data.transactionStatusCode,
+          transactionStatusDescription: data.transactionStatusDescription,
+          amount: data.amount,
+          paymentMethod: data.paymentMethod,
+          savedCard: data.token ? data.token : null,
         },
         Msg.PAYMENT_STATUS_RETRIEVED_SUCCESSFULLY,
       ),
@@ -141,10 +141,18 @@ export const paymentStatus = async (req, res) => {
       error.response?.data,
     );
 
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
-    });
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {
+          message:
+            error.response?.data?.returnStatus?.statusMsg || error.message,
+          code:
+            error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
+        },
+        Msg.SERVER_ERROR,
+      ),
+    );
   }
 };
 
