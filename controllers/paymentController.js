@@ -64,7 +64,7 @@ export const createPayment = async (req, res) => {
       transactionSignature: data.transactionSignature,
       paymentMethodList: data.paymentMethodList,
       tokenList: data.tokenList || [],
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
     });
   } catch (error) {
     const status = error.response?.status || 500;
@@ -313,7 +313,7 @@ export const payWithSavedCard = async (req, res) => {
     return res.status(200).json({
       transactionId: checkoutData.transactionID,
       transactionSignature: checkoutData.transactionSignature,
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
     });
   } catch (error) {
     const status = error.response?.status || 500;
