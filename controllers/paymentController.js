@@ -291,7 +291,7 @@ export const payWithSavedCard = async (req, res) => {
       tokenisation: {
         paymentTokens: [
           {
-            tokenType: type,
+            tokenType: "Card",
             value: token,
           },
         ],
