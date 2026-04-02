@@ -202,3 +202,74 @@ export const paymentResult = async (req, res) => {
     </html>
   `);
 };
+
+
+export const payWithSavedCard = async (req, res) => {
+  try {
+    const {
+      userId,
+      cardId,
+      amount = 10,
+      currency = "EUR",
+      description = "Payment",
+    } = req.body;
+
+    // 1. Get token from DB
+    const card = await Card.findOne({ where: { id: cardId, userId } });
+    if (!card) return res.status(404).json({ message: "Card not found" });
+
+    // 2. Create checkout with saved token
+    const checkoutPayload = {
+      merchant: {
+        terminalId: Number(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `txn_${Date.now()}`,
+      },
+      customer: {
+        customerInfo: { customerName: "User", customerEmail: "user@example.com" },
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        moto: false,
+        paymentType: "PURS",
+        amount: { value: amount, currency },
+      },
+      // ← use saved token instead of card form
+      tokenisation: {
+        paymentTokens: [
+          {
+            tokenType: card.tokenType,
+            value: card.token,
+          },
+        ],
+      },
+    };
+
+    const { data: checkoutData } = await axios.post(
+      process.env.SIBS_PAYMENT_URL,
+      checkoutPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 3. Show mini widget (only CVV needed)
+    return res.status(200).json({
+      transactionId: checkoutData.transactionID,
+      transactionSignature: checkoutData.transactionSignature,
+      maskedPAN: card.maskedPAN,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}`,
+    });
+
+  } catch (error) {
+    const status = error.response?.status || 500;
+    return res.status(status).json({
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+    });
+  }
+};
