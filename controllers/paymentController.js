@@ -117,7 +117,10 @@ export const paymentStatus = async (req, res) => {
     // console.log("[SIBS getPaymentStatus data]", data);
     console.log("[SIBS getPaymentStatus data]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
       transactionId,
       status: data.paymentStatus, // "Success", "Pending", "Declined"
       returnCode: data.returnStatus?.statusCode,
@@ -125,9 +128,11 @@ export const paymentStatus = async (req, res) => {
       transactionStatusDescription: data.transactionStatusDescription,
       amount: data.amount,
       paymentMethod: data.paymentMethod,
-      // token comes here after Success
       savedCard: data.token ? data.token : null,
-    });
+        },
+        Msg.PAYMENT_STATUS_RETRIEVED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error(

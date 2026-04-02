@@ -38,6 +38,7 @@ export const Msg = {
 
   // Payment
   PAYMENT_CREATED_SUCCESSFULLY: `Payment created successfully`,
+  PAYMENT_STATUS_RETRIEVED_SUCCESSFULLY: `Payment status retrieved successfully`,
 
 
 };
