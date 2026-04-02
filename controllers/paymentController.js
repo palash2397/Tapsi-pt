@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Msg } from "../utils/responseMsg.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
 
 export const createPayment = async (req, res) => {
   try {
@@ -59,13 +60,27 @@ export const createPayment = async (req, res) => {
 
     console.log("[SIBS createPayment data]", data);
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      transactionSignature: data.transactionSignature,
-      paymentMethodList: data.paymentMethodList,
-      tokenList: data.tokenList || [],
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
-    });
+    // return res.status(200).json({
+    //   transactionId: data.transactionID,
+    //   transactionSignature: data.transactionSignature,
+    //   paymentMethodList: data.paymentMethodList,
+    //   tokenList: data.tokenList || [],
+    //   checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
+    // });
+
+    return res.status(201).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          transactionSignature: data.transactionSignature,
+          paymentMethodList: data.paymentMethodList,
+          tokenList: data.tokenList || [],
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
+        },
+        "Payment created successfully",
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createPayment error]", status, error.response?.data);
@@ -217,13 +232,14 @@ export const getPaymentPage = async (req, res) => {
               spg-context="${formContext}"
               spg-config='${formConfig}'
             ></form>
-          </div>
-        // Live
-<script src="https://api.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
+          </div>    
+ 
+         <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
         </body>
       </html>
     `;
-  // <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+    // <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+    // <script src="https://api.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
     return res.send(html);
   } catch (error) {
     console.error("[SIBS getPaymentPage error]", error.message);
@@ -324,7 +340,6 @@ export const payWithSavedCard = async (req, res) => {
   }
 };
 
-
 export const refundPayment = async (req, res) => {
   try {
     const {
@@ -371,7 +386,7 @@ export const refundPayment = async (req, res) => {
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     console.log("[SIBS refundPayment data]", JSON.stringify(data, null, 2));
@@ -379,12 +394,11 @@ export const refundPayment = async (req, res) => {
     return res.status(200).json({
       transactionId: data.transactionID,
       originalTransactionId: transactionId,
-      status: data.paymentStatus,         // "Success", "Declined", "Pending"
+      status: data.paymentStatus, // "Success", "Declined", "Pending"
       returnCode: data.returnStatus?.statusCode,
       statusMsg: data.returnStatus?.statusMsg,
       amount: data.amount,
     });
-
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS refundPayment error]", status, error.response?.data);
