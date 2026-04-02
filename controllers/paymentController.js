@@ -94,12 +94,16 @@ export const paymentStatus = async (req, res) => {
     // console.log("[SIBS getPaymentStatus data]", data);
     console.log("[SIBS getPaymentStatus data]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
+   return res.status(200).json({
       transactionId,
-      status: data.paymentStatus, // "Success" or "Declined"
-      returnCode: data.returnStatus?.returnCode, // "000" = success, anything else = failed
-      statusMsg: data.returnStatus?.statusMsg,
-      description: data.returnStatus?.statusDescription,
+      status: data.paymentStatus,            // "Success", "Pending", "Declined"
+      returnCode: data.returnStatus?.statusCode,
+      transactionStatusCode: data.transactionStatusCode,
+      transactionStatusDescription: data.transactionStatusDescription,
+      amount: data.amount,
+      paymentMethod: data.paymentMethod,
+      // token comes here after Success
+      savedCard: data.token ? data.token : null,
     });
   } catch (error) {
     const status = error.response?.status || 500;
