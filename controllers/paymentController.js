@@ -303,7 +303,6 @@ export const payWithSavedCard = async (req, res) => {
     const {
       name,
       token,
-      type,
       email,
       amount = 10,
       currency = "EUR",
@@ -348,16 +347,28 @@ export const payWithSavedCard = async (req, res) => {
       },
     );
 
-    return res.status(200).json({
-      transactionId: checkoutData.transactionID,
-      transactionSignature: checkoutData.transactionSignature,
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: checkoutData.transactionID,
+          transactionSignature: checkoutData.transactionSignature,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
+        },
+        Msg.PAYMENT_CREATED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-    });
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {
+          message: error.response?.data?.returnStatus?.statusMsg || error.message,
+        },
+        Msg.SERVER_ERROR,
+      ),
+    );
   }
 };
 
