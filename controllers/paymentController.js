@@ -207,18 +207,15 @@ export const paymentResult = async (req, res) => {
 export const payWithSavedCard = async (req, res) => {
   try {
     const {
-      userId,
-      cardId,
+      name,
+      token,
+      type,
+      email,
       amount = 10,
       currency = "EUR",
-      description = "Payment",
     } = req.body;
 
-    // 1. Get token from DB
-    const card = await Card.findOne({ where: { id: cardId, userId } });
-    if (!card) return res.status(404).json({ message: "Card not found" });
 
-    // 2. Create checkout with saved token
     const checkoutPayload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
@@ -226,11 +223,11 @@ export const payWithSavedCard = async (req, res) => {
         merchantTransactionId: `txn_${Date.now()}`,
       },
       customer: {
-        customerInfo: { customerName: "User", customerEmail: "user@example.com" },
+        customerInfo: { customerName: name, customerEmail: email },
       },
       transaction: {
         transactionTimestamp: new Date().toISOString(),
-        description,
+        description: "Payment",
         moto: false,
         paymentType: "PURS",
         amount: { value: amount, currency },
@@ -239,8 +236,8 @@ export const payWithSavedCard = async (req, res) => {
       tokenisation: {
         paymentTokens: [
           {
-            tokenType: card.tokenType,
-            value: card.token,
+            tokenType: type,
+            value: token,
           },
         ],
       },
@@ -262,7 +259,7 @@ export const payWithSavedCard = async (req, res) => {
     return res.status(200).json({
       transactionId: checkoutData.transactionID,
       transactionSignature: checkoutData.transactionSignature,
-      maskedPAN: card.maskedPAN,
+
       checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}`,
     });
 
