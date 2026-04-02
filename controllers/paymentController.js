@@ -435,9 +435,17 @@ export const refundPayment = async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS refundPayment error]", status, error.response?.data);
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
-    });
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {
+          message:
+            error.response?.data?.returnStatus?.statusMsg || error.message,
+          code:
+            error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
+        },
+        Msg.SERVER_ERROR,
+      ),
+    );
   }
 };
