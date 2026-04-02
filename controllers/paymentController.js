@@ -64,7 +64,7 @@ export const createPayment = async (req, res) => {
       transactionSignature: data.transactionSignature,
       paymentMethodList: data.paymentMethodList,
       tokenList: data.tokenList || [],
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD,MBWAY`,
     });
   } catch (error) {
     const status = error.response?.status || 500;
