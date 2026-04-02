@@ -94,9 +94,9 @@ export const paymentStatus = async (req, res) => {
     // console.log("[SIBS getPaymentStatus data]", data);
     console.log("[SIBS getPaymentStatus data]", JSON.stringify(data, null, 2));
 
-   return res.status(200).json({
+    return res.status(200).json({
       transactionId,
-      status: data.paymentStatus,            // "Success", "Pending", "Declined"
+      status: data.paymentStatus, // "Success", "Pending", "Declined"
       returnCode: data.returnStatus?.statusCode,
       transactionStatusCode: data.transactionStatusCode,
       transactionStatusDescription: data.transactionStatusDescription,
@@ -172,6 +172,7 @@ export const paymentStatus = async (req, res) => {
 //     return res.status(500).send("Failed to load payment page");
 //   }
 // };
+
 export const getPaymentPage = async (req, res) => {
   try {
     const {
@@ -192,7 +193,7 @@ export const getPaymentPage = async (req, res) => {
     const paymentMethodList = paymentMethod.split(",");
 
     const formConfig = JSON.stringify({
-      paymentMethodList,  // ← dynamic now
+      paymentMethodList, // ← dynamic now
       amount: { value: Number(amount), currency },
       language: "en",
       redirectUrl: `${process.env.BASE_URL}/payment/sibs/result?transactionId=${transactionId}`,
@@ -223,7 +224,6 @@ export const getPaymentPage = async (req, res) => {
     `;
 
     return res.send(html);
-
   } catch (error) {
     console.error("[SIBS getPaymentPage error]", error.message);
     return res.status(500).send("Failed to load payment page");
@@ -259,7 +259,6 @@ export const paymentResult = async (req, res) => {
     </html>
   `);
 };
-
 
 export const payWithSavedCard = async (req, res) => {
   try {
@@ -308,17 +307,14 @@ export const payWithSavedCard = async (req, res) => {
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
-  
     return res.status(200).json({
       transactionId: checkoutData.transactionID,
       transactionSignature: checkoutData.transactionSignature,
-
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
     });
-
   } catch (error) {
     const status = error.response?.status || 500;
     return res.status(status).json({
