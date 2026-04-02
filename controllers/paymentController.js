@@ -300,13 +300,7 @@ export const paymentResult = async (req, res) => {
 
 export const payWithSavedCard = async (req, res) => {
   try {
-    const {
-      name,
-      token,
-      email,
-      amount = 10,
-      currency = "EUR",
-    } = req.body;
+    const { name, token, email, amount = 10, currency = "EUR" } = req.body;
 
     const checkoutPayload = {
       merchant: {
@@ -364,7 +358,8 @@ export const payWithSavedCard = async (req, res) => {
       new ApiResponse(
         status,
         {
-          message: error.response?.data?.returnStatus?.statusMsg || error.message,
+          message:
+            error.response?.data?.returnStatus?.statusMsg || error.message,
         },
         Msg.SERVER_ERROR,
       ),
@@ -423,14 +418,20 @@ export const refundPayment = async (req, res) => {
 
     console.log("[SIBS refundPayment data]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      originalTransactionId: transactionId,
-      status: data.paymentStatus, // "Success", "Declined", "Pending"
-      returnCode: data.returnStatus?.statusCode,
-      statusMsg: data.returnStatus?.statusMsg,
-      amount: data.amount,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          originalTransactionId: transactionId,
+          status: data.paymentStatus, // "Success", "Declined", "Pending"
+          returnCode: data.returnStatus?.statusCode,
+          statusMsg: data.returnStatus?.statusMsg,
+          amount: data.amount,
+        },
+        Msg.REFUND_SUCCESS,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS refundPayment error]", status, error.response?.data);
