@@ -259,7 +259,7 @@ export const payWithSavedCard = async (req, res) => {
       transactionId: checkoutData.transactionID,
       transactionSignature: checkoutData.transactionSignature,
 
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}`,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${checkoutData.transactionID}&formContext=${encodeURIComponent(checkoutData.formContext)}&amount=${amount}&currency=${currency}`,
     });
 
   } catch (error) {
