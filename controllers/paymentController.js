@@ -41,6 +41,12 @@ export const createPayment = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
+
+      tokenisation: {
+        tokenisationRequest: {
+          tokeniseCard: true,
+        },
+      },
     };
 
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
@@ -53,9 +59,9 @@ export const createPayment = async (req, res) => {
 
     return res.status(200).json({
       transactionId: data.transactionID,
-      formContext: data.formContext,
       transactionSignature: data.transactionSignature,
       paymentMethodList: data.paymentMethodList,
+      tokenList: data.tokenList || [],
       checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
     });
   } catch (error) {
