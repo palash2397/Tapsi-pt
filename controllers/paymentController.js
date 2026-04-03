@@ -444,7 +444,7 @@ export const refundPayment = async (req, res) => {
           code:
             error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
         },
-        Msg.SERVER_ERROR,
+        error.response?.data?.returnStatus?.statusDescription,
       ),
     );
   }
