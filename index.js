@@ -1,6 +1,6 @@
 import express from "express";
 import morgan from "morgan";
-import "dotenv/config.js";
+import "./config/env.js";
 
 const app = express();
 const PORT = process.env.PORT;
