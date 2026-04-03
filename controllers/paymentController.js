@@ -301,7 +301,7 @@ export const paymentResult = async (req, res) => {
 
 export const payWithSavedCard = async (req, res) => {
   try {
-    const { name, token, email, amount = 10, currency = "EUR" } = req.body;
+    const { name, token, email, amount = 0.1, currency = "EUR" } = req.body;
 
     const checkoutPayload = {
       merchant: {
