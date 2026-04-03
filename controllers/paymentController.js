@@ -82,6 +82,7 @@ export const createPayment = async (req, res) => {
       ),
     );
   } catch (error) {
+    console.log("[SIBS createPayment error]", error);
     const status = error.response?.status || 500;
     console.error("[SIBS createPayment error]", status, error.response?.data);
     return res.status(status).json(
