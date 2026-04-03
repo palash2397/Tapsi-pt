@@ -8,7 +8,6 @@ const PORT = process.env.PORT;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(morgan("dev"));
 
 // Root route

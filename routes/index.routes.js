@@ -5,4 +5,5 @@ const rootRouter = Router();
 
 rootRouter.use("/payment", paymentRouter);
 
+
 export default rootRouter;
