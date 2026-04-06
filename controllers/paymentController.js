@@ -456,9 +456,15 @@ export const payWithSavedCardMIT = async (req, res) => {
     const { amount, currency = "EUR", token, initialTransactionId } = req.body;
 
     if (!amount || !token || !initialTransactionId) {
-      return res.status(400).json({
-        message: "amount, token and initialTransactionId are required",
-      });
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            Msg.AMOUNT_TOKEN_INITIAL_TRANSACTION_ID,
+          ),
+        );
     }
 
     const payload = {
