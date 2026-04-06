@@ -453,68 +453,80 @@ export const refundPayment = async (req, res) => {
 
 export const payWithSavedCardMIT = async (req, res) => {
   try {
-    const { amount, currency = "EUR", token, initialTransactionId } = req.body;
+    const {
+      amount,
+      currency = "EUR",
+      token,
+      tokenType = "Card",         // "Card" or "MobilePhone"
+      initialTransactionId,
+      type = "UCOF",              // "UCOF" or "RCRR"
+      validityDate = "2027-12-31T00:00:00.000Z",
+    } = req.body;
 
     if (!amount || !token || !initialTransactionId) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(400, {}, Msg.AMOUNT_TOKEN_INITIAL_TRANSACTION_ID),
-        );
+      return res.status(400).json({
+        message: "amount, token and initialTransactionId are required",
+      });
     }
 
     const payload = {
       merchant: {
-        terminalId: process.env.SIBS_TERMINAL,
+        terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
         merchantTransactionId: `txn_${Date.now()}`,
       },
-
       transaction: {
         transactionTimestamp: new Date().toISOString(),
-        description: "Saved card MIT payment",
+        description: "MIT saved card payment",
+        moto: false,
         paymentType: "PURS",
         amount: {
           value: Number(amount),
           currency,
         },
-
-        // 🔥 KEY PART (MIT)
+        // ✅ correct MIT structure
         merchantInitiatedTransaction: {
-          originalTransactionId: initialTransactionId,
-          reason: "UCOF", // use RECURRING if subscription
+          type,                     // "UCOF" or "RCRR"
+          validityDate,
+          amountQualifier: "ACTUAL",
         },
       },
-
-      // 🔥 use saved token
+      // ✅ correct token structure
       tokenisation: {
-        token,
+        paymentTokens: [
+          {
+            tokenType,
+            value: token,
+          },
+        ],
       },
     };
 
-    const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
-      headers: {
-        Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
-        "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
-        "Content-Type": "application/json",
-      },
-    });
+    const { data } = await axios.post(
+      process.env.SIBS_PAYMENT_URL,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log("[SIBS MIT payment]", data);
+    console.log("[SIBS MIT payment]", JSON.stringify(data, null, 2));
 
     return res.status(200).json({
       transactionId: data.transactionID,
-      status: data.returnStatus?.statusMsg,
+      status: data.paymentStatus,
+      returnCode: data.returnStatus?.statusCode,
+      statusMsg: data.returnStatus?.statusMsg,
+      amount: data.amount,
     });
+
   } catch (error) {
     const status = error.response?.status || 500;
-
-    console.error(
-      "[SIBS MIT payment error]",
-      status,
-      error.response?.data || error.message,
-    );
-
+    console.error("[SIBS MIT payment error]", status, error.response?.data);
     return res.status(status).json({
       message: error.response?.data?.returnStatus?.statusMsg || error.message,
       code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",

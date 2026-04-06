@@ -5,7 +5,8 @@ import {
   getPaymentPage,
   paymentResult,
   payWithSavedCard,
-  refundPayment
+  refundPayment,
+  payWithSavedCardMIT,
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -16,5 +17,6 @@ paymentRouter.get("/page", getPaymentPage);
 paymentRouter.get("/result", paymentResult);
 paymentRouter.post("/pay/saved/card", payWithSavedCard);
 paymentRouter.post("/refund", refundPayment);
+paymentRouter.post("/pay/saved/card/mit", payWithSavedCardMIT);
 
 export default paymentRouter;
