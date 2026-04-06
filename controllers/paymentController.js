@@ -459,11 +459,7 @@ export const payWithSavedCardMIT = async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            Msg.AMOUNT_TOKEN_INITIAL_TRANSACTION_ID,
-          ),
+          new ApiResponse(400, {}, Msg.AMOUNT_TOKEN_INITIAL_TRANSACTION_ID),
         );
     }
 
