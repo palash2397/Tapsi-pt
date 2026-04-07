@@ -457,24 +457,17 @@ export const payWithSavedCardMIT = async (req, res) => {
       amount,
       currency = "EUR",
       token,
-      tokenType = "Card",         // "Card" or "MobilePhone"
-      initialTransactionId,
-      type = "UCOF",              // "UCOF" or "RCRR"
+      tokenType = "Card",
+      type = "UCOF",
       validityDate = "2027-12-31T00:00:00.000Z",
     } = req.body;
 
-    console.log("[SIBS payWithSavedCardMIT req.body]", req.body);
-
-    if (!amount || !token || !initialTransactionId) {
-      return res.status(400).json({
-        message: "amount, token and initialTransactionId are required",
-      });
+    if (!amount || !token) {
+      return res.status(400).json({ message: "amount and token are required" });
     }
 
-
-    console.log("----------------->", process.env.SIBS_TERMINAL)
-
-    const payload = {
+    // ── Step 1: Checkout ──────────────────────────────────────────
+    const checkoutPayload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
@@ -482,58 +475,75 @@ export const payWithSavedCardMIT = async (req, res) => {
       },
       transaction: {
         transactionTimestamp: new Date().toISOString(),
-        description: "MIT saved card payment",
+        description: "MIT payment",
         moto: false,
         paymentType: "PURS",
-        amount: {
-          value: Number(amount),
-          currency,
-        },
-        // ✅ correct MIT structure
+        amount: { value: Number(amount), currency },
         merchantInitiatedTransaction: {
-          type,                     // "UCOF" or "RCRR"
+          type,
           validityDate,
-          amountQualifier: "ACTUAL",
-          initialTransactionId
+          amountQualifier: "ESTIMATED",
         },
       },
-      // ✅ correct token structure
       tokenisation: {
-        paymentTokens: [
-          {
-            tokenType,
-            value: token,
-          },
-        ],
+        paymentTokens: [{ tokenType, value: token }],
       },
     };
-    
-    // console.log("[SIBS MIT payload]", JSON.stringify(payload, null, 2));
-    const { data } = await axios.post(
+
+    const { data: checkoutData } = await axios.post(
       process.env.SIBS_PAYMENT_URL,
-      payload,
+      checkoutPayload,
       {
         headers: {
           Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
-    // console.log("[SIBS MIT payment]", JSON.stringify(data, null, 2));
+    console.log("[SIBS MIT checkout]", JSON.stringify(checkoutData, null, 2));
+
+    const { transactionID, transactionSignature } = checkoutData;
+
+    // ── Step 2: Token Purchase ────────────────────────────────────
+    const purchasePayload = {
+      tokenInfo: {
+        tokenType,
+        value: token,
+      },
+      merchantInitiatedTransaction: {
+        type,
+        validityDate,
+        amountQualifier: "ESTIMATED",
+        customerAcceptance: false, // ← false = MIT (merchant initiated)
+      },
+    };
+
+    const { data: purchaseData } = await axios.post(
+      `${process.env.SIBS_BASE_URL}/sibs/spg/v2/payments/${transactionID}/token/purchase`,
+      purchasePayload,
+      {
+        headers: {
+          Authorization: `Digest ${transactionSignature}`, // ← Digest not Bearer
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    console.log("[SIBS MIT purchase]", JSON.stringify(purchaseData, null, 2));
 
     return res.status(200).json({
-      transactionId: data.transactionID,
-      status: data.paymentStatus,
-      returnCode: data.returnStatus?.statusCode,
-      statusMsg: data.returnStatus?.statusMsg,
-      amount: data.amount,
+      transactionId: purchaseData.transactionID || transactionID,
+      status: purchaseData.paymentStatus,
+      returnCode: purchaseData.returnStatus?.statusCode,
+      statusMsg: purchaseData.returnStatus?.statusMsg,
+      amount: purchaseData.amount,
     });
-
   } catch (error) {
     const status = error.response?.status || 500;
-    //console.error("[SIBS MIT payment error]", status, error.response?.data);
+    console.error("[SIBS MIT error]", status, error.response?.data);
     return res.status(status).json({
       message: error.response?.data?.returnStatus?.statusMsg || error.message,
       code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
