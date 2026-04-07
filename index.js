@@ -20,6 +20,7 @@ app.get("/api", (req, res) => {
 });
 
 app.listen(PORT, () => {
+  console.clear();
   console.log(`Server is running on port ${PORT}`);
 });
 
