@@ -456,91 +456,60 @@ export const payWithSavedCardMIT = async (req, res) => {
     const {
       amount,
       currency = "EUR",
-      token,
-      tokenType = "Card",
+      originalTransactionId,
       type = "UCOF",
-      validityDate = "2027-12-31T00:00:00.000Z",
     } = req.body;
 
-    if (!amount || !token) {
-      return res.status(400).json({ message: "amount and token are required" });
+    if (!amount || !originalTransactionId) {
+      return res.status(400).json({
+        message: "amount and originalTransactionId are required",
+      });
     }
 
-    // ── Step 1: Checkout ──────────────────────────────────────────
-    const checkoutPayload = {
+    const payload = {
       merchant: {
-        terminalId: Number(process.env.SIBS_TERMINAL),
+        terminalId: String(process.env.SIBS_TERMINAL),
         channel: "web",
         merchantTransactionId: `txn_${Date.now()}`,
       },
       transaction: {
+        type,
         transactionTimestamp: new Date().toISOString(),
         description: "MIT payment",
-        moto: false,
-        paymentType: "PURS",
-        amount: { value: Number(amount), currency },
-        merchantInitiatedTransaction: {
-          type,
-          validityDate,
-          amountQualifier: "ESTIMATED",
+        amount: {
+          value: Number(amount),
+          currency,
         },
-      },
-      tokenisation: {
-        paymentTokens: [{ tokenType, value: token }],
+        originalTransaction: {
+          id: originalTransactionId,
+        },
       },
     };
 
-    const { data: checkoutData } = await axios.post(
-      process.env.SIBS_PAYMENT_URL,
-      checkoutPayload,
+    console.log("[SIBS MIT payload]", JSON.stringify(payload, null, 2));
+
+    const { data } = await axios.post(
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${originalTransactionId}/mit`,
+      payload,
       {
         headers: {
           Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      },
+      }
     );
 
-    console.log("[SIBS MIT checkout]", JSON.stringify(checkoutData, null, 2));
-
-    const { transactionID, transactionSignature } = checkoutData;
-
-    // ── Step 2: Token Purchase ────────────────────────────────────
-    const purchasePayload = {
-      tokenInfo: {
-        tokenType,
-        value: token,
-      },
-      merchantInitiatedTransaction: {
-        type,
-        validityDate,
-        amountQualifier: "ESTIMATED",
-        customerAcceptance: false, // ← false = MIT (merchant initiated)
-      },
-    };
-
-    const { data: purchaseData } = await axios.post(
-      `${process.env.SIBS_BASE_URL}/sibs/spg/v2/payments/${transactionID}/token/purchase`,
-      purchasePayload,
-      {
-        headers: {
-          Authorization: `Digest ${transactionSignature}`, // ← Digest not Bearer
-          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    console.log("[SIBS MIT purchase]", JSON.stringify(purchaseData, null, 2));
+    console.log("[SIBS MIT response]", JSON.stringify(data, null, 2));
 
     return res.status(200).json({
-      transactionId: purchaseData.transactionID || transactionID,
-      status: purchaseData.paymentStatus,
-      returnCode: purchaseData.returnStatus?.statusCode,
-      statusMsg: purchaseData.returnStatus?.statusMsg,
-      amount: purchaseData.amount,
+      transactionId: data.transactionID,
+      status: data.paymentStatus,
+      returnCode: data.returnStatus?.statusCode,
+      statusMsg: data.returnStatus?.statusMsg,
+      amount: data.amount,
     });
+
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS MIT error]", status, error.response?.data);
