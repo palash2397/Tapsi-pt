@@ -3,7 +3,7 @@ import morgan from "morgan";
 import "dotenv/config";
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 4006;
 
 // Middleware
 app.use(express.json());

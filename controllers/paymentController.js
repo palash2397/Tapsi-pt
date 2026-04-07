@@ -463,11 +463,16 @@ export const payWithSavedCardMIT = async (req, res) => {
       validityDate = "2027-12-31T00:00:00.000Z",
     } = req.body;
 
+    console.log("[SIBS payWithSavedCardMIT req.body]", req.body);
+
     if (!amount || !token || !initialTransactionId) {
       return res.status(400).json({
         message: "amount, token and initialTransactionId are required",
       });
     }
+
+
+    console.log("----------------->", process.env.SIBS_TERMINAL)
 
     const payload = {
       merchant: {
@@ -489,6 +494,7 @@ export const payWithSavedCardMIT = async (req, res) => {
           type,                     // "UCOF" or "RCRR"
           validityDate,
           amountQualifier: "ACTUAL",
+          initialTransactionId
         },
       },
       // ✅ correct token structure
@@ -501,7 +507,8 @@ export const payWithSavedCardMIT = async (req, res) => {
         ],
       },
     };
-
+    
+    // console.log("[SIBS MIT payload]", JSON.stringify(payload, null, 2));
     const { data } = await axios.post(
       process.env.SIBS_PAYMENT_URL,
       payload,
@@ -514,7 +521,7 @@ export const payWithSavedCardMIT = async (req, res) => {
       }
     );
 
-    console.log("[SIBS MIT payment]", JSON.stringify(data, null, 2));
+    // console.log("[SIBS MIT payment]", JSON.stringify(data, null, 2));
 
     return res.status(200).json({
       transactionId: data.transactionID,
@@ -526,7 +533,7 @@ export const payWithSavedCardMIT = async (req, res) => {
 
   } catch (error) {
     const status = error.response?.status || 500;
-    console.error("[SIBS MIT payment error]", status, error.response?.data);
+    //console.error("[SIBS MIT payment error]", status, error.response?.data);
     return res.status(status).json({
       message: error.response?.data?.returnStatus?.statusMsg || error.message,
       code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
