@@ -531,7 +531,11 @@ export const createAuth = async (req, res) => {
 
     console.log("[SIBS createAuth data]", req.body);
 
-    if (!amount) return res.status(400).json({ message: "amount is required" });
+    if (!amount) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, Msg.AMOUNT_REQUIRED));
+    }
 
     const payload = {
       merchant: {
@@ -575,13 +579,19 @@ export const createAuth = async (req, res) => {
       },
     });
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      formContext: data.formContext,
-      transactionSignature: data.transactionSignature,
-      paymentMethodList: data.paymentMethodList,
-      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          formContext: data.formContext,
+          transactionSignature: data.transactionSignature,
+          paymentMethodList: data.paymentMethodList,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+        },
+        Msg.PAYMENT_CREATED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createAuth error]", status, error.response?.data);
