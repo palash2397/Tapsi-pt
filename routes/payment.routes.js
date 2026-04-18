@@ -7,6 +7,7 @@ import {
   payWithSavedCard,
   refundPayment,
   payWithSavedCardMIT,
+  createAuth,
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -18,5 +19,6 @@ paymentRouter.get("/result", paymentResult);
 paymentRouter.post("/pay/saved/card", payWithSavedCard);
 paymentRouter.post("/refund", refundPayment);
 paymentRouter.post("/pay/saved/card/mit", payWithSavedCardMIT);
+paymentRouter.post("/auth", createAuth);
 
 export default paymentRouter;

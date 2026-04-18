@@ -497,7 +497,7 @@ export const payWithSavedCardMIT = async (req, res) => {
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     console.log("[SIBS MIT response]", JSON.stringify(data, null, 2));
@@ -509,13 +509,85 @@ export const payWithSavedCardMIT = async (req, res) => {
       statusMsg: data.returnStatus?.statusMsg,
       amount: data.amount,
     });
-
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS MIT error]", status, error.response?.data);
     return res.status(status).json({
       message: error.response?.data?.returnStatus?.statusMsg || error.message,
       code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
+    });
+  }
+};
+
+export const createAuth = async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = "EUR",
+      description = "Ride booking authorization",
+      customerName = "Customer",
+      customerEmail = "customer@example.com",
+    } = req.body;
+
+    console.log("[SIBS createAuth data]", req.body);
+
+    if (!amount) return res.status(400).json({ message: "amount is required" });
+
+    const payload = {
+      merchant: {
+        terminalId: Number(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `auth_${Date.now()}`,
+      },
+      customer: {
+        customerInfo: { customerName, customerEmail },
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        moto: false,
+        paymentType: "AUTH", // ← AUTH not PURS
+        amount: { value: Number(amount), currency },
+      },
+      info: {
+        deviceInfo: {
+          browserAcceptHeader: req.headers["accept"] || "text/html",
+          browserJavaEnabled: "false",
+          browserLanguage:
+            req.headers["accept-language"]?.split(",")[0] || "en",
+          browserColorDepth: "24",
+          browserScreenHeight: "1080",
+          browserScreenWidth: "1920",
+          browserTZ: "0",
+          browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
+        },
+      },
+      tokenisation: {
+        tokenisationRequest: { tokeniseCard: true },
+      },
+    };
+
+    const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
+      headers: {
+        Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+        "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return res.status(200).json({
+      transactionId: data.transactionID,
+      formContext: data.formContext,
+      transactionSignature: data.transactionSignature,
+      paymentMethodList: data.paymentMethodList,
+      checkoutPageUrl: `${process.env.BASE_URL}/payment/sibs/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+    });
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error("[SIBS createAuth error]", status, error.response?.data);
+    return res.status(status).json({
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
     });
   }
 };
