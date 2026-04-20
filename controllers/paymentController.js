@@ -1,4 +1,5 @@
 import axios from "axios";
+import Joi from "joi";
 import { Msg } from "../utils/responseMsg.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -521,12 +522,7 @@ export const payWithSavedCardMIT = async (req, res) => {
 
 export const createAuth = async (req, res) => {
   try {
-    const {
-      amount,
-      description,
-      customerName,
-      customerEmail,
-    } = req.body;
+    const { amount, description, customerName, customerEmail } = req.body;
 
     console.log("[SIBS createAuth data]", req.body);
 
@@ -594,12 +590,65 @@ export const createAuth = async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createAuth error]", status, error.response?.data);
-    return res.status(500).json(
-      new ApiResponse(
-        500,
-        {},
-        error.response?.data?.returnStatus?.statusMsg || error.message,
-      ),
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          {},
+          error.response?.data?.returnStatus?.statusMsg || error.message,
+        ),
+      );
+  }
+};
+
+export const capturePayment = async (req, res) => {
+  try {
+    const { transactionId, amount, description } = req.body;
+
+    if (!amount) return res.status(400).json(new ApiResponse(400, {}, ));
+
+    const payload = {
+      merchant: {
+        terminalId: String(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `capt_${Date.now()}`,
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        amount: { value: Number(amount), currency: "EUR" },
+        originalTransaction: { id: transactionId },
+      },
+    };
+
+    const { data } = await axios.post(
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/capture`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      },
     );
+
+    console.log("[SIBS capturePayment]", JSON.stringify(data, null, 2));
+
+    return res.status(200).json({
+      transactionId: data.transactionID,
+      originalTransactionId: transactionId,
+      status: data.paymentStatus,
+      returnCode: data.returnStatus?.statusCode,
+      amount: data.amount,
+    });
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error("[SIBS capturePayment error]", status, error.response?.data);
+    return res.status(status).json({
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+      code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
+    });
   }
 };
