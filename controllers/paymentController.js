@@ -605,6 +605,7 @@ export const createAuth = async (req, res) => {
 export const capturePayment = async (req, res) => {
   try {
     const { transactionId, amount, description } = req.body;
+    console.log("req.body ------->", req.body)
 
     const schema = Joi.object({
       transactionId: Joi.string().required(),
