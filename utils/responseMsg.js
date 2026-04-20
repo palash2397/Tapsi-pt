@@ -31,13 +31,12 @@ export const Msg = {
   CUSTOMER_UPDATE_FAILED: `Customer update failed`,
   CUSTOMER_DELETE_FAILED: `Customer delete failed`,
   CUSTOMER_DELETE_SUCCESS: `Customer deleted successfully`,
-
-
   AMOUNT_AND_EMAIL_REQUIRED: `Amount and email are required`,
 
 
   // Payment
   PAYMENT_CREATED_SUCCESSFULLY: `Payment created successfully`,
+  PAYMENT_CAPTURED_SUCCESSFULLY: `Payment captured successfully`,
   PAYMENT_STATUS_RETRIEVED_SUCCESSFULLY: `Payment status retrieved successfully`,
   REFUND_SUCCESS: `Refund processed successfully`,
   AMOUNT_TOKEN_INITIAL_TRANSACTION_ID: `Amount, token and initialTransactionId are required`,

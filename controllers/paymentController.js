@@ -606,7 +606,17 @@ export const capturePayment = async (req, res) => {
   try {
     const { transactionId, amount, description } = req.body;
 
-    if (!amount) return res.status(400).json(new ApiResponse(400, {}, ));
+    const schema = Joi.object({
+      transactionId: Joi.string().required(),
+      amount: Joi.number().required(),
+      description: Joi.string().optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, error.details[0].message));
 
     const payload = {
       merchant: {
@@ -636,13 +646,19 @@ export const capturePayment = async (req, res) => {
 
     console.log("[SIBS capturePayment]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      originalTransactionId: transactionId,
-      status: data.paymentStatus,
-      returnCode: data.returnStatus?.statusCode,
-      amount: data.amount,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          originalTransactionId: transactionId,
+          status: data.paymentStatus,
+          returnCode: data.returnStatus?.statusCode,
+          amount: data.amount,
+        },
+        Msg.PAYMENT_CAPTURED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS capturePayment error]", status, error.response?.data);
