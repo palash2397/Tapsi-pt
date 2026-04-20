@@ -669,18 +669,18 @@ export const capturePayment = async (req, res) => {
   }
 };
 
-
 export const cancelPayment = async (req, res) => {
   try {
-
-    const {transactionId,  description } = req.body;
+    const { transactionId, description } = req.body;
     const schema = Joi.object({
       transactionId: Joi.string().required(),
       description: Joi.string().required(),
-    })
+    });
     const { error } = schema.validate(req.body);
     if (error) {
-       return res.status(400).json(new ApiResponse(400, {}, error.details[0].message));
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, error.details[0].message));
     }
 
     const payload = {
@@ -705,7 +705,7 @@ export const cancelPayment = async (req, res) => {
           "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     console.log("[SIBS cancelPayment]", JSON.stringify(data, null, 2));
@@ -717,7 +717,6 @@ export const cancelPayment = async (req, res) => {
       returnCode: data.returnStatus?.statusCode,
       statusMsg: data.returnStatus?.statusMsg,
     });
-
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS cancelPayment error]", status, error.response?.data);
