@@ -668,3 +668,62 @@ export const capturePayment = async (req, res) => {
     });
   }
 };
+
+
+export const cancelPayment = async (req, res) => {
+  try {
+
+    const {transactionId,  description } = req.body;
+    const schema = Joi.object({
+      transactionId: Joi.string().required(),
+      description: Joi.string().required(),
+    })
+    const { error } = schema.validate(req.body);
+    if (error) {
+       return res.status(400).json(new ApiResponse(400, {}, error.details[0].message));
+    }
+
+    const payload = {
+      merchant: {
+        terminalId: String(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `canc_${Date.now()}`,
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        originalTransaction: { id: transactionId },
+      },
+    };
+
+    const { data } = await axios.post(
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/cancellation`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("[SIBS cancelPayment]", JSON.stringify(data, null, 2));
+
+    return res.status(200).json({
+      transactionId: data.transactionID,
+      originalTransactionId: transactionId,
+      status: data.paymentStatus,
+      returnCode: data.returnStatus?.statusCode,
+      statusMsg: data.returnStatus?.statusMsg,
+    });
+
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error("[SIBS cancelPayment error]", status, error.response?.data);
+    return res.status(status).json({
+      message: error.response?.data?.returnStatus?.statusMsg || error.message,
+      code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
+    });
+  }
+};
