@@ -8,6 +8,8 @@ import {
   refundPayment,
   payWithSavedCardMIT,
   createAuth,
+  capturePayment,
+  cancelPayment
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -20,5 +22,7 @@ paymentRouter.post("/pay/saved/card", payWithSavedCard);
 paymentRouter.post("/refund", refundPayment);
 paymentRouter.post("/pay/saved/card/mit", payWithSavedCardMIT);
 paymentRouter.post("/auth", createAuth);
+paymentRouter.post("/capture", capturePayment);
+paymentRouter.post("/cancel", cancelPayment);
 
 export default paymentRouter;
