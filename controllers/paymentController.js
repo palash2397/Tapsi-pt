@@ -523,10 +523,9 @@ export const createAuth = async (req, res) => {
   try {
     const {
       amount,
-      currency = "EUR",
-      description = "Ride booking authorization",
-      customerName = "Customer",
-      customerEmail = "customer@example.com",
+      description,
+      customerName,
+      customerEmail,
     } = req.body;
 
     console.log("[SIBS createAuth data]", req.body);
@@ -551,7 +550,7 @@ export const createAuth = async (req, res) => {
         description,
         moto: false,
         paymentType: "AUTH", // ← AUTH not PURS
-        amount: { value: Number(amount), currency },
+        amount: { value: Number(amount), currency: "EUR" },
       },
       info: {
         deviceInfo: {
@@ -595,9 +594,12 @@ export const createAuth = async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createAuth error]", status, error.response?.data);
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.returnCode || "UNKNOWN_ERROR",
-    });
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {},
+        error.response?.data?.returnStatus?.statusMsg || error.message,
+      ),
+    );
   }
 };
