@@ -710,19 +710,12 @@ export const cancelPayment = async (req, res) => {
 
     console.log("[SIBS cancelPayment]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      originalTransactionId: transactionId,
-      status: data.paymentStatus,
-      returnCode: data.returnStatus?.statusCode,
-      statusMsg: data.returnStatus?.statusMsg,
-    });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, Msg.PAYMENT_CANCELLED_SUCCESSFULLY));
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS cancelPayment error]", status, error.response?.data);
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
-    });
+    return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
   }
 };

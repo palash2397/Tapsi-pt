@@ -36,10 +36,12 @@ export const Msg = {
 
   // Payment
   PAYMENT_CREATED_SUCCESSFULLY: `Payment created successfully`,
+  PAYMENT_CANCELLED_SUCCESSFULLY: `Payment cancelled successfully`,
   PAYMENT_CAPTURED_SUCCESSFULLY: `Payment captured successfully`,
   PAYMENT_STATUS_RETRIEVED_SUCCESSFULLY: `Payment status retrieved successfully`,
   REFUND_SUCCESS: `Refund processed successfully`,
   AMOUNT_TOKEN_INITIAL_TRANSACTION_ID: `Amount, token and initialTransactionId are required`,
-  AMOUNT_REQUIRED: `Amount is required`
+  AMOUNT_REQUIRED: `Amount is required`,
+  
 
 };
