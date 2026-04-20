@@ -22,7 +22,7 @@ paymentRouter.post("/pay/saved/card", payWithSavedCard);
 paymentRouter.post("/refund", refundPayment);
 paymentRouter.post("/pay/saved/card/mit", payWithSavedCardMIT);
 paymentRouter.post("/auth", createAuth);
-paymentRouter.post("/capture", capturePayment);
+paymentRouter.patch("/capture", capturePayment);
 paymentRouter.post("/cancel", cancelPayment);
 
 export default paymentRouter;

@@ -522,7 +522,7 @@ export const payWithSavedCardMIT = async (req, res) => {
 
 export const createAuth = async (req, res) => {
   try {
-    const { amount, description, customerName, customerEmail } = req.body;
+    const { amount, description, currency = "EUR", customerName, customerEmail } = req.body;
 
     console.log("[SIBS createAuth data]", req.body);
 
@@ -546,7 +546,7 @@ export const createAuth = async (req, res) => {
         description,
         moto: false,
         paymentType: "AUTH", // ← AUTH not PURS
-        amount: { value: Number(amount), currency: "EUR" },
+        amount: { value: Number(amount), currency },
       },
       info: {
         deviceInfo: {
