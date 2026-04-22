@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import "dotenv/config";
+import chalk from "chalk";
 
 const app = express();
 const PORT = process.env.PORT || 4006;
@@ -21,7 +22,9 @@ app.get("/api", (req, res) => {
 
 app.listen(PORT, () => {
   console.clear();
-  console.log(`Server is running on port ${PORT}`);
+  console.log(chalk.blue("╔════════════════════════════════════════════════════════════════╗"));
+  console.log(chalk.blue("║") + "  " + chalk.cyan("TASPSI") + " " + chalk.white("is running on port") + " " + chalk.green(PORT) + " " + chalk.blue("║"));
+  console.log(chalk.blue("╚════════════════════════════════════════════════════════════════╝"));
 });
 
 
