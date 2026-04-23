@@ -560,10 +560,10 @@ export const createAuth = async (req, res) => {
           browserTZ: "0",
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
-      },
-      tokenisation: {
-        tokenisationRequest: { tokeniseCard: true },
-      },
+      }
+      // tokenisation: {
+      //   tokenisationRequest: { tokeniseCard: true },
+      // },
     };
 
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
