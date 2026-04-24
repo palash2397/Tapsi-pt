@@ -641,11 +641,12 @@ export const createAuth = async (req, res) => {
 
 export const capturePayment = async (req, res) => {
   try {
-    const { transactionId, amount, description } = req.body;
-    console.log("req.body ------->", req.body);
+    const { authTransactionId, previousTransactionId, amount, description } =
+      req.body;
 
     const schema = Joi.object({
-      transactionId: Joi.string().required(),
+      authTransactionId: Joi.string().required(), // ← always the original AUTH ID
+      previousTransactionId: Joi.string().required(), // ← last capture ID (or AUTH ID for first capture)
       amount: Joi.number().required(),
       description: Joi.string().optional(),
     });
@@ -666,12 +667,12 @@ export const capturePayment = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         amount: { value: Number(amount), currency: "EUR" },
-        originalTransaction: { id: transactionId },
+        originalTransaction: { id: previousTransactionId }, // ← previous capture ID
       },
     };
 
     const { data } = await axios.post(
-      `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/capture`,
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${authTransactionId}/capture`, // ← always AUTH ID in URL
       payload,
       {
         headers: {
@@ -682,14 +683,12 @@ export const capturePayment = async (req, res) => {
       },
     );
 
-    console.log("[SIBS capturePayment]", JSON.stringify(data, null, 2));
-
     return res.status(200).json(
       new ApiResponse(
         200,
         {
-          transactionId: data.transactionID,
-          originalTransactionId: transactionId,
+          transactionId: data.transactionID, // ← save this for next capture
+          authTransactionId,
           status: data.paymentStatus,
           returnCode: data.returnStatus?.statusCode,
           amount: data.amount,
