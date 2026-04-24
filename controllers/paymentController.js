@@ -641,11 +641,10 @@ export const createAuth = async (req, res) => {
 
 export const capturePayment = async (req, res) => {
   try {
-    const { authTransactionId, previousTransactionId, amount, description } =
+    const { previousTransactionId, amount, description } =
       req.body;
 
     const schema = Joi.object({
-      authTransactionId: Joi.string().required(), // ← only authTransactionId needed
       previousTransactionId: Joi.string().optional(), // ← optional for first capture
       amount: Joi.number().required(),
       description: Joi.string().optional(),
@@ -667,7 +666,7 @@ export const capturePayment = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         amount: { value: Number(amount), currency: "EUR" },
-        originalTransaction: { id: previousTransactionId }, // ← previous ID
+        originalTransaction: { id: previousTransactionId }, 
       },
     };
 
@@ -688,7 +687,6 @@ export const capturePayment = async (req, res) => {
         200,
         {
           transactionId: data.transactionID,
-          authTransactionId,
           status: data.paymentStatus,
           returnCode: data.returnStatus?.statusCode,
           amount: data.amount,
