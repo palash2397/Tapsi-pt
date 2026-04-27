@@ -641,13 +641,20 @@ export const createAuth = async (req, res) => {
 
 export const capturePayment = async (req, res) => {
   try {
-    const { previousTransactionId, amount, description } =
-      req.body;
+    const {
+      previousTransactionId,
+      amount,
+      description,
+      captureNumber,
+      maxCaptures,
+    } = req.body;
 
     const schema = Joi.object({
-      previousTransactionId: Joi.string().optional(), // ← optional for first capture
+      previousTransactionId: Joi.string().required(),
       amount: Joi.number().required(),
       description: Joi.string().optional(),
+      captureNumber: Joi.number().optional(),
+      maxCaptures: Joi.number().optional(),
     });
 
     const { error } = schema.validate(req.body);
@@ -666,12 +673,19 @@ export const capturePayment = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         amount: { value: Number(amount), currency: "EUR" },
-        originalTransaction: { id: previousTransactionId }, 
+        originalTransaction: { id: previousTransactionId },
+      },
+      saleContext: {
+        splitPayment: {
+          split: true,
+          paymentNumber: captureNumber,
+          maxPayments: maxCaptures,
+        },
       },
     };
 
     const { data } = await axios.post(
-      `${process.env.SIBS_BASE_URL}/api/v2/payments/${previousTransactionId}/capture`, // ← always AUTH ID
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${previousTransactionId}/capture`,
       payload,
       {
         headers: {
@@ -682,11 +696,14 @@ export const capturePayment = async (req, res) => {
       },
     );
 
+    console.log("[SIBS capturePayment]", JSON.stringify(data, null, 2));
+
     return res.status(200).json(
       new ApiResponse(
         200,
         {
           transactionId: data.transactionID,
+          previousTransactionId,
           status: data.paymentStatus,
           returnCode: data.returnStatus?.statusCode,
           amount: data.amount,
