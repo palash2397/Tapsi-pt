@@ -723,10 +723,11 @@ export const capturePayment = async (req, res) => {
 
 export const cancelPayment = async (req, res) => {
   try {
-    const { transactionId, description } = req.body;
+    const { transactionId, description, amount } = req.body;
     const schema = Joi.object({
       transactionId: Joi.string().required(),
       description: Joi.string().required(),
+      amount: Joi.number().required(),
     });
     const { error } = schema.validate(req.body);
     if (error) {
@@ -777,7 +778,18 @@ export const cancelPayment = async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, {}, Msg.PAYMENT_CANCELLED_SUCCESSFULLY));
+      .json(
+        new ApiResponse(
+          200,
+          {
+            amount: data.amount,
+            transactionID: data.transactionID,
+            paymentStatus: data.paymentStatus,
+            execution: data.execution,
+          },
+          Msg.PAYMENT_CANCELLED_SUCCESSFULLY,
+        ),
+      );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS cancelPayment error]", status, error.response?.data);
