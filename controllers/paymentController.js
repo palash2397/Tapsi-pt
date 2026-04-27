@@ -737,16 +737,29 @@ export const cancelPayment = async (req, res) => {
 
     const payload = {
       merchant: {
-        terminalId: Number(process.env.SIBS_TERMINAL), 
+        terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
         merchantTransactionId: `canc_${Date.now()}`,
       },
       transaction: {
         transactionTimestamp: new Date().toISOString(),
         description,
+        amount: {
+          value: Number(amount),
+          currency: "EUR",
+        },
         originalTransaction: { id: transactionId },
       },
     };
+
+    console.log(
+      "[SIBS cancelPayment payload]",
+      JSON.stringify(payload, null, 2),
+    );
+    console.log(
+      "[SIBS cancelPayment URL]",
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/cancellation`,
+    );
 
     const { data } = await axios.post(
       `${process.env.SIBS_BASE_URL}/api/v2/payments/${transactionId}/cancellation`,
