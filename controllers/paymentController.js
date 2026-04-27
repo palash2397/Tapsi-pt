@@ -737,7 +737,7 @@ export const cancelPayment = async (req, res) => {
 
     const payload = {
       merchant: {
-        terminalId: String(process.env.SIBS_TERMINAL),
+        terminalId: Number(process.env.SIBS_TERMINAL), 
         channel: "web",
         merchantTransactionId: `canc_${Date.now()}`,
       },
