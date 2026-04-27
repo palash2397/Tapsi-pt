@@ -11,6 +11,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+
+// webhook
+import {sibsWebhook} from "./controllers/paymentController.js";
+app.use("/webhook", sibsWebhook);
+
 // Root route
 import indexRouter from "./routes/index.routes.js";
 app.use("/api/v1", indexRouter);
