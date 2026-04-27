@@ -777,20 +777,18 @@ export const cancelPayment = async (req, res) => {
 
     console.log("[SIBS cancelPayment]", JSON.stringify(data, null, 2));
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          {
-            transactionID: data.transactionID,
-            amount: data.amount,
-            paymentStatus: data.paymentStatus,
-            execution: data.execution,
-          },
-          Msg.PAYMENT_CANCELLED_SUCCESSFULLY,
-        ),
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionID: data.transactionID,
+          amount: data.amount,
+          paymentStatus: data.paymentStatus,
+          execution: data.execution,
+        },
+        Msg.PAYMENT_CANCELLED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS cancelPayment error]", status, error.response?.data);
@@ -798,11 +796,8 @@ export const cancelPayment = async (req, res) => {
   }
 };
 
-
-
 export const sibsWebhook = async (req, res) => {
   try {
-
     const iv = req.headers["x-initialization-vector"];
     const authTag = req.headers["x-authentication-tag"];
 
@@ -815,14 +810,14 @@ export const sibsWebhook = async (req, res) => {
     const decipher = crypto.createDecipheriv(
       "aes-256-gcm",
       key,
-      Buffer.from(iv, "base64")
+      Buffer.from(iv, "base64"),
     );
     decipher.setAuthTag(Buffer.from(authTag, "base64"));
 
     let decrypted = decipher.update(
       Buffer.from(req.body, "base64"),
       undefined,
-      "utf-8"
+      "utf-8",
     );
     decrypted += decipher.final("utf-8");
 
@@ -841,42 +836,33 @@ export const sibsWebhook = async (req, res) => {
     } = payload;
 
     if (paymentStatus === "Success" && paymentType === "PURS") {
-
-      console.log(`[Webhook] PURS Success - txn: ${transactionID}, amount: ${amount?.value} ${amount?.currency}`);
-  
-
+      console.log(
+        `[Webhook] PURS Success - txn: ${transactionID}, amount: ${amount?.value} ${amount?.currency}`,
+      );
     } else if (paymentStatus === "Success" && paymentType === "AUTH") {
-     
       console.log(`[Webhook] AUTH Success - txn: ${transactionID}`);
-
     } else if (paymentStatus === "Success" && paymentType === "CAPT") {
-      // ✅ Capture success
-      console.log(`[Webhook] CAPT Success - txn: ${transactionID}, amount: ${amount?.value}`);
-
+      console.log(
+        `[Webhook] CAPT Success - txn: ${transactionID}, amount: ${amount?.value}`,
+      );
     } else if (paymentStatus === "Success" && paymentType === "RFND") {
-      // 💸 Refund success
       console.log(`[Webhook] RFND Success - txn: ${transactionID}`);
-
     } else if (paymentStatus === "Success" && paymentType === "CANC") {
-      // ❌ Cancellation success
       console.log(`[Webhook] CANC Success - txn: ${transactionID}`);
-
     } else if (paymentStatus === "Declined") {
-      // ❌ Payment declined
-      console.log(`[Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`);
+      console.log(
+        `[Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
+      );
     }
 
-    // ── MUST return this exact format ─────────────────────────────
-    // If not returned correctly SIBS retries for up to 2 months!
     return res.status(200).json({
       statusCode: "200",
       statusMsg: "Success",
-      notificationID,             // ← must echo back the notificationID
+      notificationID,
     });
-
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
-    // Still return 200 to stop retries
+   
     return res.status(200).json({
       statusCode: "200",
       statusMsg: "Success",
