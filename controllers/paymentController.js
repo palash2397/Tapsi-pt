@@ -797,3 +797,91 @@ export const cancelPayment = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
   }
 };
+
+
+
+// export const sibsWebhook = async (req, res) => {
+//   try {
+
+//     const iv = req.headers["x-initialization-vector"];
+//     const authTag = req.headers["x-authentication-tag"];
+
+//     if (!iv || !authTag) {
+//       console.error("[SIBS Webhook] Missing headers");
+//       return res.status(400).json({ message: "Missing decryption headers" });
+//     }
+
+//     const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
+//     const decipher = crypto.createDecipheriv(
+//       "aes-256-gcm",
+//       key,
+//       Buffer.from(iv, "base64")
+//     );
+//     decipher.setAuthTag(Buffer.from(authTag, "base64"));
+
+//     let decrypted = decipher.update(
+//       Buffer.from(req.body, "base64"),
+//       undefined,
+//       "utf-8"
+//     );
+//     decrypted += decipher.final("utf-8");
+
+//     const payload = JSON.parse(decrypted);
+
+//     console.log("[SIBS Webhook payload]", JSON.stringify(payload, null, 2));
+
+//     const {
+//       notificationID,
+//       paymentStatus,
+//       paymentMethod,
+//       paymentType,
+//       transactionID,
+//       amount,
+//       merchant,
+//     } = payload;
+
+//     // ── Handle events ─────────────────────────────────────────────
+//     if (paymentStatus === "Success" && paymentType === "PURS") {
+//       // ✅ Regular payment success
+//       console.log(`[Webhook] PURS Success - txn: ${transactionID}, amount: ${amount?.value} ${amount?.currency}`);
+//       // await Order.update({ status: "paid" }, { where: { transactionId: transactionID } });
+
+//     } else if (paymentStatus === "Success" && paymentType === "AUTH") {
+//       // ✅ Authorization success — amount held
+//       console.log(`[Webhook] AUTH Success - txn: ${transactionID}`);
+
+//     } else if (paymentStatus === "Success" && paymentType === "CAPT") {
+//       // ✅ Capture success
+//       console.log(`[Webhook] CAPT Success - txn: ${transactionID}, amount: ${amount?.value}`);
+
+//     } else if (paymentStatus === "Success" && paymentType === "RFND") {
+//       // 💸 Refund success
+//       console.log(`[Webhook] RFND Success - txn: ${transactionID}`);
+
+//     } else if (paymentStatus === "Success" && paymentType === "CANC") {
+//       // ❌ Cancellation success
+//       console.log(`[Webhook] CANC Success - txn: ${transactionID}`);
+
+//     } else if (paymentStatus === "Declined") {
+//       // ❌ Payment declined
+//       console.log(`[Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`);
+//     }
+
+//     // ── MUST return this exact format ─────────────────────────────
+//     // If not returned correctly SIBS retries for up to 2 months!
+//     return res.status(200).json({
+//       statusCode: "200",
+//       statusMsg: "Success",
+//       notificationID,             // ← must echo back the notificationID
+//     });
+
+//   } catch (error) {
+//     console.error("[SIBS Webhook error]", error.message);
+//     // Still return 200 to stop retries
+//     return res.status(200).json({
+//       statusCode: "200",
+//       statusMsg: "Success",
+//       notificationID: null,
+//     });
+//   }
+// };
