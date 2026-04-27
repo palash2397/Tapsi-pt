@@ -11,10 +11,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-
 // webhook
-import {sibsWebhook} from "./controllers/paymentController.js";
-app.use("/webhook", sibsWebhook);
+import { sibsWebhook } from "./controllers/paymentController.js";
+app.use(
+  "/api/v1/payment/webhook",
+  express.raw({ type: "application/json" }),
+  sibsWebhook,
+);
 
 // Root route
 import indexRouter from "./routes/index.routes.js";
@@ -27,9 +30,25 @@ app.get("/api", (req, res) => {
 
 app.listen(PORT, () => {
   console.clear();
-  console.log(chalk.blue("╔════════════════════════════════════════════════════════════════╗"));
-  console.log(chalk.blue("║") + "  " + chalk.cyan("TASPSI") + " " + chalk.white("is running on port") + " " + chalk.green(PORT) + " " + chalk.blue("║"));
-  console.log(chalk.blue("╚════════════════════════════════════════════════════════════════╝"));
+  console.log(
+    chalk.blue(
+      "╔════════════════════════════════════════════════════════════════╗",
+    ),
+  );
+  console.log(
+    chalk.blue("║") +
+      "  " +
+      chalk.cyan("TASPSI") +
+      " " +
+      chalk.white("is running on port") +
+      " " +
+      chalk.green(PORT) +
+      " " +
+      chalk.blue("║"),
+  );
+  console.log(
+    chalk.blue(
+      "╚════════════════════════════════════════════════════════════════╝",
+    ),
+  );
 });
-
-
