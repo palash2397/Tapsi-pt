@@ -457,9 +457,8 @@ export const payWithSavedCardMIT = async (req, res) => {
   try {
     const {
       amount,
-      currency = "EUR",
+      currency,
       originalTransactionId,
-      type = "UCOF",
     } = req.body;
 
     if (!amount || !originalTransactionId) {
@@ -470,17 +469,17 @@ export const payWithSavedCardMIT = async (req, res) => {
 
     const payload = {
       merchant: {
-        terminalId: String(process.env.SIBS_TERMINAL),
+        terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
         merchantTransactionId: `txn_${Date.now()}`,
       },
       transaction: {
-        type,
+        type: "UCOF",
         transactionTimestamp: new Date().toISOString(),
         description: "MIT payment",
         amount: {
           value: Number(amount),
-          currency,
+          currency: currency || "EUR",
         },
         originalTransaction: {
           id: originalTransactionId,
