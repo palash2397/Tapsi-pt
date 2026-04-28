@@ -869,6 +869,7 @@ export const sibsWebhook = async (req, res) => {
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
 
+    return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
     // return res.status(200).json({
     //     statusCode: "200",
     //     statusMsg: "Success",
