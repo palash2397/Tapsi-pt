@@ -455,11 +455,7 @@ export const refundPayment = async (req, res) => {
 
 export const payWithSavedCardMIT = async (req, res) => {
   try {
-    const {
-      amount,
-      currency,
-      originalTransactionId,
-    } = req.body;
+    const { amount, currency, originalTransactionId } = req.body;
 
     if (!amount || !originalTransactionId) {
       return res.status(400).json({
@@ -484,6 +480,8 @@ export const payWithSavedCardMIT = async (req, res) => {
         originalTransaction: {
           id: originalTransactionId,
         },
+        validityDate: "2027-12-31T00:00:00.000Z",
+        amountQualifier: "ESTIMATED",
       },
     };
 
