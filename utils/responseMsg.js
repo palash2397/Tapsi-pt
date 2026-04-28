@@ -42,6 +42,11 @@ export const Msg = {
   REFUND_SUCCESS: `Refund processed successfully`,
   AMOUNT_TOKEN_INITIAL_TRANSACTION_ID: `Amount, token and initialTransactionId are required`,
   AMOUNT_REQUIRED: `Amount is required`,
+
+
+  // Webhook
+  MISSING_DECRIPTION_HEADERS: `Missing decryption headers`,
+  WEBHOOK_SUCCESS: `Webhook processed successfully`,
   
 
 };

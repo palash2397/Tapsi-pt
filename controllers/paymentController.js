@@ -803,7 +803,9 @@ export const sibsWebhook = async (req, res) => {
 
     if (!iv || !authTag) {
       console.error("[SIBS Webhook] Missing headers");
-      return res.status(400).json({ message: "Missing decryption headers" });
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, Msg.MISSING_DECRIPTION_HEADERS));
     }
 
     const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
@@ -855,18 +857,22 @@ export const sibsWebhook = async (req, res) => {
       );
     }
 
-    return res.status(200).json({
-      statusCode: "200",
-      statusMsg: "Success",
-      notificationID,
-    });
+    // return res.status(200).json({
+    //   statusCode: "200",
+    //   statusMsg: "Success",
+    //   notificationID,
+    // });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { notificationID }, Msg.WEBHOOK_SUCCESS));
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
-   
-    return res.status(200).json({
-      statusCode: "200",
-      statusMsg: "Success",
-      notificationID: null,
-    });
+
+    // return res.status(200).json({
+    //     statusCode: "200",
+    //     statusMsg: "Success",
+    //     notificationID: null,
+    //   });
   }
 };
