@@ -799,7 +799,6 @@ export const sibsWebhook = async (req, res) => {
     const authTag = req.headers["x-authentication-tag"];
 
     if (!iv || !authTag) {
-      console.error("[SIBS Webhook] Missing headers");
       return res
         .status(400)
         .json(new ApiResponse(400, {}, Msg.MISSING_DECRIPTION_HEADERS));
@@ -822,7 +821,7 @@ export const sibsWebhook = async (req, res) => {
 
     const payload = JSON.parse(decrypted);
 
-    console.log("[SIBS Webhook payload]", JSON.stringify(payload, null, 2));
+    // console.log("[SIBS Webhook payload]", JSON.stringify(payload, null, 2));
 
     const {
       notificationID,
