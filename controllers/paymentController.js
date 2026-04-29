@@ -125,7 +125,7 @@ export const paymentStatus = async (req, res) => {
         200,
         {
           transactionId,
-          status: data.paymentStatus, // "Success", "Pending", "Declined"
+          status: data.paymentStatus, 
           returnCode: data.returnStatus?.statusCode,
           transactionStatusCode: data.transactionStatusCode,
           transactionStatusDescription: data.transactionStatusDescription,
