@@ -501,20 +501,29 @@ export const payWithSavedCardMIT = async (req, res) => {
 
     console.log("[SIBS MIT response]", JSON.stringify(data, null, 2));
 
-    return res.status(200).json({
-      transactionId: data.transactionID,
-      status: data.paymentStatus,
-      returnCode: data.returnStatus?.statusCode,
-      statusMsg: data.returnStatus?.statusMsg,
-      amount: data.amount,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          status: data.paymentStatus,
+          returnCode: data.returnStatus?.statusCode,
+          statusMsg: data.returnStatus?.statusMsg,
+          amount: data.amount,
+        },
+        Msg.PAYMENT_CREATED_SUCCESSFULLY,
+      ),
+    );
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS MIT error]", status, error.response?.data);
-    return res.status(status).json({
-      message: error.response?.data?.returnStatus?.statusMsg || error.message,
-      code: error.response?.data?.returnStatus?.statusCode || "UNKNOWN_ERROR",
-    });
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {},
+        error.response?.data?.returnStatus?.statusMsg || error.message,
+      ),
+    );
   }
 };
 
@@ -850,7 +859,6 @@ export const sibsWebhook = async (req, res) => {
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
   }
-
 
   return res.status(200).json({
     statusCode: "200",
