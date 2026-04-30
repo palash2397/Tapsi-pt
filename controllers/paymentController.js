@@ -125,7 +125,7 @@ export const paymentStatus = async (req, res) => {
         200,
         {
           transactionId,
-          status: data.paymentStatus, 
+          status: data.paymentStatus,
           returnCode: data.returnStatus?.statusCode,
           transactionStatusCode: data.transactionStatusCode,
           transactionStatusDescription: data.transactionStatusDescription,
@@ -794,82 +794,67 @@ export const cancelPayment = async (req, res) => {
 };
 
 export const sibsWebhook = async (req, res) => {
+  let notificationID = null;
+
   try {
     const iv = req.headers["x-initialization-vector"];
     const authTag = req.headers["x-authentication-tag"];
 
-    if (!iv || !authTag) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, Msg.MISSING_DECRIPTION_HEADERS));
+    let payload;
+
+    if (iv && authTag) {
+      const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
+      const decipher = crypto.createDecipheriv(
+        "aes-256-gcm",
+        key,
+        Buffer.from(iv, "base64"),
+      );
+      decipher.setAuthTag(Buffer.from(authTag, "base64"));
+      const decrypted =
+        decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
+        decipher.final("utf-8");
+      payload = JSON.parse(decrypted);
+    } else {
+      payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     }
 
-    const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
-    const decipher = crypto.createDecipheriv(
-      "aes-256-gcm",
-      key,
-      Buffer.from(iv, "base64"),
-    );
-    decipher.setAuthTag(Buffer.from(authTag, "base64"));
+    notificationID = payload.notificationID;
+    const { paymentStatus, paymentType, paymentMethod, transactionID, amount } =
+      payload;
 
-    let decrypted = decipher.update(
-      Buffer.from(req.body, "base64"),
-      undefined,
-      "utf-8",
-    );
-    decrypted += decipher.final("utf-8");
-
-    const payload = JSON.parse(decrypted);
-
-    // console.log("[SIBS Webhook payload]", JSON.stringify(payload, null, 2));
-
-    const {
-      notificationID,
+    console.log("[SIBS Webhook]", {
       paymentStatus,
-      paymentMethod,
       paymentType,
+      paymentMethod,
       transactionID,
       amount,
-      merchant,
-    } = payload;
+    });
 
-    if (paymentStatus === "Success" && paymentType === "PURS") {
-      console.log(
-        `[Webhook] PURS Success - txn: ${transactionID}, amount: ${amount?.value} ${amount?.currency}`,
-      );
-    } else if (paymentStatus === "Success" && paymentType === "AUTH") {
-      console.log(`[Webhook] AUTH Success - txn: ${transactionID}`);
-    } else if (paymentStatus === "Success" && paymentType === "CAPT") {
-      console.log(
-        `[Webhook] CAPT Success - txn: ${transactionID}, amount: ${amount?.value}`,
-      );
-    } else if (paymentStatus === "Success" && paymentType === "RFND") {
-      console.log(`[Webhook] RFND Success - txn: ${transactionID}`);
-    } else if (paymentStatus === "Success" && paymentType === "CANC") {
-      console.log(`[Webhook] CANC Success - txn: ${transactionID}`);
+    const handlers = {
+      PURS: () => {},
+      AUTH: () => {},
+      CAPT: () => {},
+      RFND: () => {},
+      CANC: () => {},
+    };
+
+    if (paymentStatus === "Success" && handlers[paymentType]) {
+      handlers[paymentType]();
     } else if (paymentStatus === "Declined") {
-      console.log(
-        `[Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
+      console.warn(
+        `[SIBS Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
       );
+    } else if (paymentStatus === "Pending") {
+      console.log(`[SIBS Webhook] Pending - txn: ${transactionID}`);
     }
-
-    // return res.status(200).json({
-    //   statusCode: "200",
-    //   statusMsg: "Success",
-    //   notificationID,
-    // });
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { notificationID }, Msg.WEBHOOK_SUCCESS));
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
-
-    return res.status(500).json(new ApiResponse(500, {}, Msg.SERVER_ERROR));
-    // return res.status(200).json({
-    //     statusCode: "200",
-    //     statusMsg: "Success",
-    //     notificationID: null,
-    //   });
   }
+
+  // ── Always respond to stop retry ──────────────────────────
+  return res.status(200).json({
+    statusCode: "200",
+    statusMsg: "Success",
+    notificationID,
+  });
 };

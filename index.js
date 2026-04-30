@@ -15,7 +15,7 @@ app.use(morgan("dev"));
 import { sibsWebhook } from "./controllers/paymentController.js";
 app.use(
   "/api/v1/payment/webhook",
-  express.raw({ type: "application/json" }),
+  express.raw({ type: "*/*" }),
   sibsWebhook,
 );
 
