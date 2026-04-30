@@ -851,7 +851,7 @@ export const sibsWebhook = async (req, res) => {
     console.error("[SIBS Webhook error]", error.message);
   }
 
-  // ── Always respond to stop retry ──────────────────────────
+
   return res.status(200).json({
     statusCode: "200",
     statusMsg: "Success",
