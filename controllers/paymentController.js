@@ -322,7 +322,7 @@ export const getPaymentPage = async (req, res) => {
       </script>
     </body>
   </html>
-`;
+     `;
 
     // const html = `
     //   <!DOCTYPE html>
@@ -930,11 +930,11 @@ export const sibsWebhook = async (req, res) => {
     });
 
     const handlers = {
-      PURS: () => {},
-      AUTH: () => {},
-      CAPT: () => {},
-      RFND: () => {},
-      CANC: () => {},
+      PURS: () => { },
+      AUTH: () => { },
+      CAPT: () => { },
+      RFND: () => { },
+      CANC: () => { },
     };
 
     if (paymentStatus === "Success" && handlers[paymentType]) {
