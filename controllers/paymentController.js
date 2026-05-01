@@ -465,12 +465,23 @@ export const refundPayment = async (req, res) => {
       description = "Refund",
     } = req.body;
 
-    if (!transactionId) {
-      return res.status(400).json({ error: "transactionId is required" });
-    }
+    const schema = Joi.object({
+      amount: Joi.number().required(),
+      transactionId: Joi.string().required(),
+    });
 
-    if (!amount) {
-      return res.status(400).json({ error: "amount is required" });
+    const { error } = schema.validate({ amount, transactionId });
+
+    if (error) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            { message: error.details[0].message },
+            Msg.VALIDATION_ERROR,
+          ),
+        );
     }
 
     const payload = {
@@ -930,11 +941,11 @@ export const sibsWebhook = async (req, res) => {
     });
 
     const handlers = {
-      PURS: () => { },
-      AUTH: () => { },
-      CAPT: () => { },
-      RFND: () => { },
-      CANC: () => { },
+      PURS: () => {},
+      AUTH: () => {},
+      CAPT: () => {},
+      RFND: () => {},
+      CANC: () => {},
     };
 
     if (paymentStatus === "Success" && handlers[paymentType]) {
@@ -1062,6 +1073,7 @@ export const createAuthWithSavedCard = async (req, res) => {
     });
 
     const { error } = schema.validate({ amount, token });
+
     if (error) {
       return res
         .status(400)
