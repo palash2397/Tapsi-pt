@@ -27,6 +27,6 @@ paymentRouter.patch("/capture", capturePayment);
 paymentRouter.post("/cancel", cancelPayment);
 
 // Auth
-paymentRouter.post("/auth/saved/card", createAuthWithSavedCard);
+paymentRouter.patch("/auth/saved/card", createAuthWithSavedCard);
 
 export default paymentRouter;

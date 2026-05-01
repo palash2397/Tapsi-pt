@@ -1031,8 +1031,8 @@ export const createAuthWithSavedCard = async (req, res) => {
         200,
         {
           transactionId: data.transactionID,
-          formContext: data.formContext,
-          transactionSignature: data.transactionSignature,
+          // formContext: data.formContext,
+          // transactionSignature: data.transactionSignature,
           paymentMethodList: data.paymentMethodList,
           checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=CARD`,
         },
