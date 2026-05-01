@@ -608,7 +608,9 @@ export const createAuth = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
-      // ← tokenisation block completely removed
+      tokenisation: {
+        tokenisationRequest: { tokeniseCard: true },
+      },
     };
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
       headers: {
