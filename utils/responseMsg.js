@@ -47,6 +47,12 @@ export const Msg = {
   // Webhook
   MISSING_DECRIPTION_HEADERS: `Missing decryption headers`,
   WEBHOOK_SUCCESS: `Webhook processed successfully`,
+
+
+  // Auth with saved card
+  AUTH_CREATED_WITH_SAVED_CARD: `Auth created with saved card`,
+  AMOUNT_AND_TOKEN_REQUIRED: `Amount and token are required`,
+  SIBS_ERROR: `SIBS error`,
   
 
 };
