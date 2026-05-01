@@ -517,13 +517,15 @@ export const payWithSavedCardMIT = async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS MIT error]", status, error.response?.data);
-    return res.status(status).json(
-      new ApiResponse(
-        status,
-        {},
-        error.response?.data?.returnStatus?.statusMsg || error.message,
-      ),
-    );
+    return res
+      .status(status)
+      .json(
+        new ApiResponse(
+          status,
+          {},
+          error.response?.data?.returnStatus?.statusMsg || error.message,
+        ),
+      );
   }
 };
 
@@ -867,4 +869,93 @@ export const sibsWebhook = async (req, res) => {
     statusMsg: "Success",
     notificationID,
   });
+};
+
+export const createAuthAndSaveCard = async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = "EUR",
+      description = "Ride booking",
+      customerName = "Customer",
+      customerEmail = "customer@example.com",
+    } = req.body;
+
+    if (!amount)
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "amount is required"));
+
+    const payload = {
+      merchant: {
+        terminalId: Number(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `auth_${Date.now()}`,
+      },
+      customer: {
+        customerInfo: { customerName, customerEmail },
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        moto: false,
+        paymentType: "AUTH",
+        amount: { value: Number(amount), currency },
+      },
+      info: {
+        deviceInfo: {
+          browserAcceptHeader: req.headers["accept"] || "text/html",
+          browserJavaEnabled: "false",
+          browserLanguage:
+            req.headers["accept-language"]?.split(",")[0] || "en",
+          browserColorDepth: "24",
+          browserScreenHeight: "1080",
+          browserScreenWidth: "1920",
+          browserTZ: "0",
+          browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
+        },
+      },
+
+      tokenisation: {
+        tokenisationRequest: { tokeniseCard: true },
+      },
+    };
+
+    const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
+      headers: {
+        Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+        "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          formContext: data.formContext,
+          transactionSignature: data.transactionSignature,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+        },
+        "Auth created successfully",
+      ),
+    );
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error(
+      "[SIBS createAuthAndSaveCard error]",
+      status,
+      error.response?.data,
+    );
+    return res
+      .status(status)
+      .json(
+        new ApiResponse(
+          status,
+          {},
+          error.response?.data?.returnStatus?.statusMsg || error.message,
+        ),
+      );
+  }
 };
