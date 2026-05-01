@@ -239,29 +239,115 @@ export const getPaymentPage = async (req, res) => {
     });
 
     const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-            .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <form
-              class="paymentSPG"
-              spg-context="${formContext}"
-              spg-config='${formConfig}'
-            ></form>
-          </div>    
- 
-         <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
-        </body>
-      </html>
-    `;
+ <!DOCTYPE html>
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+
+        /* ── Loader ── */
+        #loader {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          gap: 16px;
+        }
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f0f0f0;
+          border-top: 4px solid #2e7d32;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        #loader p {
+          color: #666;
+          font-size: 14px;
+        }
+
+        /* ── Hide form until widget ready ── */
+        #payment-form {
+          display: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+
+        <!-- Show loader while widget loads -->
+        <div id="loader">
+          <div class="spinner"></div>
+          <p>Loading payment...</p>
+        </div>
+
+        <!-- Hidden until widget is ready -->
+        <div id="payment-form">
+          <form
+            class="paymentSPG"
+            spg-context="${formContext}"
+            spg-config='${formConfig}'
+          ></form>
+        </div>
+
+      </div>
+
+      <script>
+        // ← Load widget script dynamically AFTER DOM is ready
+        window.addEventListener("load", function () {
+          var script = document.createElement("script");
+          script.src = "https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}";
+
+          script.onload = function () {
+            // Widget loaded — show form, hide loader
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("payment-form").style.display = "block";
+          };
+
+          script.onerror = function () {
+            // Widget failed to load
+            document.getElementById("loader").innerHTML =
+              "<p style='color:red;text-align:center;'>Failed to load payment. Please try again.</p>";
+          };
+
+          document.body.appendChild(script);
+        });
+      </script>
+    </body>
+  </html>
+`;
+
+    // const html = `
+    //   <!DOCTYPE html>
+    //   <html>
+    //     <head>
+    //       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //       <style>
+    //         * { margin: 0; padding: 0; box-sizing: border-box; }
+    //         body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    //         .container { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+    //       </style>
+    //     </head>
+    //     <body>
+    //       <div class="container">
+    //         <form
+    //           class="paymentSPG"
+    //           spg-context="${formContext}"
+    //           spg-config='${formConfig}'
+    //         ></form>
+    //       </div>
+
+    //      <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
+    //     </body>
+    //   </html>
+    // `;
     // <script src="https://spg.qly.site1.sibs.pt/assets/js/widget.js?id=${transactionId}"></script>
     // <script src="https://api.sibspayments.com/assets/js/widget.js?id=${transactionId}"></script>
     return res.send(html);
