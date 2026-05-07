@@ -903,95 +903,95 @@ export const cancelPayment = async (req, res) => {
   }
 };
 
-export const sibsWebhook = async (req, res) => {
-  let notificationID = null;
+// export const sibsWebhook = async (req, res) => {
+//   let notificationID = null;
 
-  try {
-    const iv = req.headers["x-initialization-vector"];
-    const authTag = req.headers["x-authentication-tag"];
+//   try {
+//     const iv = req.headers["x-initialization-vector"];
+//     const authTag = req.headers["x-authentication-tag"];
 
-    let payload;
+//     let payload;
 
-    // if (iv && authTag) {
-    //   const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
-    //   const decipher = crypto.createDecipheriv(
-    //     "aes-256-gcm",
-    //     key,
-    //     Buffer.from(iv, "base64"),
-    //   );
-    //   decipher.setAuthTag(Buffer.from(authTag, "base64"));
-    //   const decrypted =
-    //     decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
-    //     decipher.final("utf-8");
-    //   payload = JSON.parse(decrypted);
-    // } else {
-    //   payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    // }
+//     // if (iv && authTag) {
+//     //   const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
+//     //   const decipher = crypto.createDecipheriv(
+//     //     "aes-256-gcm",
+//     //     key,
+//     //     Buffer.from(iv, "base64"),
+//     //   );
+//     //   decipher.setAuthTag(Buffer.from(authTag, "base64"));
+//     //   const decrypted =
+//     //     decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
+//     //     decipher.final("utf-8");
+//     //   payload = JSON.parse(decrypted);
+//     // } else {
+//     //   payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+//     // }
 
-    // notificationID = payload.notificationID;
+//     // notificationID = payload.notificationID;
 
-    if (iv && authTag) {
-      const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
-      const decipher = crypto.createDecipheriv(
-        "aes-256-gcm",
-        key,
-        Buffer.from(iv, "base64"),
-      );
-      decipher.setAuthTag(Buffer.from(authTag, "base64"));
-      const decrypted =
-        decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
-        decipher.final("utf-8");
-      payload = JSON.parse(decrypted);
-    } else {
-      if (Buffer.isBuffer(req.body)) {
-        payload = JSON.parse(req.body.toString("utf-8"));
-      } else if (typeof req.body === "string") {
-        payload = JSON.parse(req.body);
-      } else {
-        payload = req.body;
-      }
-    }
+//     if (iv && authTag) {
+//       const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
+//       const decipher = crypto.createDecipheriv(
+//         "aes-256-gcm",
+//         key,
+//         Buffer.from(iv, "base64"),
+//       );
+//       decipher.setAuthTag(Buffer.from(authTag, "base64"));
+//       const decrypted =
+//         decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
+//         decipher.final("utf-8");
+//       payload = JSON.parse(decrypted);
+//     } else {
+//       if (Buffer.isBuffer(req.body)) {
+//         payload = JSON.parse(req.body.toString("utf-8"));
+//       } else if (typeof req.body === "string") {
+//         payload = JSON.parse(req.body);
+//       } else {
+//         payload = req.body;
+//       }
+//     }
 
-    notificationID = payload.notificationID;
-    console.log("[SIBS Webhook notificationID]", notificationID);
-    const { paymentStatus, paymentType, paymentMethod, transactionID, amount } =
-      payload;
+//     notificationID = payload.notificationID;
+//     console.log("[SIBS Webhook notificationID]", notificationID);
+//     const { paymentStatus, paymentType, paymentMethod, transactionID, amount } =
+//       payload;
 
-    console.log("[SIBS Webhook]", {
-      paymentStatus,
-      paymentType,
-      paymentMethod,
-      transactionID,
-      amount,
-    });
+//     console.log("[SIBS Webhook]", {
+//       paymentStatus,
+//       paymentType,
+//       paymentMethod,
+//       transactionID,
+//       amount,
+//     });
 
-    const handlers = {
-      PURS: () => {},
-      AUTH: () => {},
-      CAPT: () => {},
-      RFND: () => {},
-      CANC: () => {},
-    };
+//     const handlers = {
+//       PURS: () => {},
+//       AUTH: () => {},
+//       CAPT: () => {},
+//       RFND: () => {},
+//       CANC: () => {},
+//     };
 
-    if (paymentStatus === "Success" && handlers[paymentType]) {
-      handlers[paymentType]();
-    } else if (paymentStatus === "Declined") {
-      console.warn(
-        `[SIBS Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
-      );
-    } else if (paymentStatus === "Pending") {
-      console.log(`[SIBS Webhook] Pending - txn: ${transactionID}`);
-    }
-  } catch (error) {
-    console.error("[SIBS Webhook error]", error.message);
-  }
+//     if (paymentStatus === "Success" && handlers[paymentType]) {
+//       handlers[paymentType]();
+//     } else if (paymentStatus === "Declined") {
+//       console.warn(
+//         `[SIBS Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
+//       );
+//     } else if (paymentStatus === "Pending") {
+//       console.log(`[SIBS Webhook] Pending - txn: ${transactionID}`);
+//     }
+//   } catch (error) {
+//     console.error("[SIBS Webhook error]", error.message);
+//   }
 
-  return res.status(200).json({
-    statusCode: "200",
-    statusMsg: "Success",
-    notificationID,
-  });
-};
+//   return res.status(200).json({
+//     statusCode: "200",
+//     statusMsg: "Success",
+//     notificationID,
+//   });
+// };
 
 // export const createAuthAndSaveCard = async (req, res) => {
 //   try {
@@ -1081,6 +1081,113 @@ export const sibsWebhook = async (req, res) => {
 //       );
 //   }
 // };
+
+
+
+export const sibsWebhook = async (req, res) => {
+  let notificationID = null;
+
+  try {
+    const iv = req.headers["x-initialization-vector"];
+    const authTag = req.headers["x-authentication-tag"];
+
+    let payload;
+
+    // 🔐 Encrypted webhook from SIBS
+    if (iv && authTag) {
+      const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "base64");
+
+      const decipher = crypto.createDecipheriv(
+        "aes-256-gcm",
+        key,
+        Buffer.from(iv, "base64"),
+      );
+
+      decipher.setAuthTag(Buffer.from(authTag, "base64"));
+
+      const decrypted =
+        decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
+        decipher.final("utf-8");
+
+      payload = JSON.parse(decrypted);
+    }
+
+    // 🟢 Plain JSON webhook
+    else {
+      if (Buffer.isBuffer(req.body)) {
+        payload = JSON.parse(req.body.toString("utf-8"));
+      } else if (typeof req.body === "string") {
+        payload = JSON.parse(req.body);
+      } else {
+        payload = req.body;
+      }
+    }
+
+    notificationID = payload.notificationID;
+
+    console.log("[SIBS Webhook notificationID]", notificationID);
+
+    const { paymentStatus, paymentType, paymentMethod, transactionID, amount } =
+      payload;
+
+    console.log("[SIBS Webhook]", {
+      paymentStatus,
+      paymentType,
+      paymentMethod,
+      transactionID,
+      amount,
+    });
+
+    // 🎯 Handle payment types
+    const handlers = {
+      PURS: () => {
+        console.log(`[PURS] Purchase success for txn ${transactionID}`);
+      },
+
+      AUTH: () => {
+        console.log(`[AUTH] Amount authorized for txn ${transactionID}`);
+      },
+
+      CAPT: () => {
+        console.log(`[CAPT] Amount captured for txn ${transactionID}`);
+      },
+
+      RFND: () => {
+        console.log(`[RFND] Refund completed for txn ${transactionID}`);
+      },
+
+      CANC: () => {
+        console.log(`[CANC] Authorization cancelled for txn ${transactionID}`);
+      },
+    };
+
+    // ✅ Success
+    if (paymentStatus === "Success" && handlers[paymentType]) {
+      handlers[paymentType]();
+    }
+
+    // ❌ Declined
+    else if (paymentStatus === "Declined") {
+      console.warn(
+        `[SIBS Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
+      );
+    }
+
+    // ⏳ Pending
+    else if (paymentStatus === "Pending") {
+      console.log(`[SIBS Webhook] Pending - txn: ${transactionID}`);
+    }
+  } catch (error) {
+    console.error("[SIBS Webhook error]", error.message);
+  }
+
+  // ✅ IMPORTANT: return same notificationID
+  return res.status(200).json({
+    statusCode: "200",
+    statusMsg: "Success",
+    notificationID,
+  });
+};
 
 export const createAuthWithSavedCard = async (req, res) => {
   try {
