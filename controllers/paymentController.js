@@ -1082,8 +1082,6 @@ export const cancelPayment = async (req, res) => {
 //   }
 // };
 
-
-
 export const sibsWebhook = async (req, res) => {
   let notificationID = null;
 
@@ -1106,10 +1104,15 @@ export const sibsWebhook = async (req, res) => {
       decipher.setAuthTag(Buffer.from(authTag, "base64"));
 
       const decrypted =
-        decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
-        decipher.final("utf-8");
+        decipher.update(
+          Buffer.from(req.body.toString(), "base64"),
+          undefined,
+          "utf-8",
+        ) + decipher.final("utf-8");
 
       payload = JSON.parse(decrypted);
+
+      console.log("[SIBS Webhook decrypted]", payload);
     }
 
     // 🟢 Plain JSON webhook
