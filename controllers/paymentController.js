@@ -912,6 +912,24 @@ export const sibsWebhook = async (req, res) => {
 
     let payload;
 
+    // if (iv && authTag) {
+    //   const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
+    //   const decipher = crypto.createDecipheriv(
+    //     "aes-256-gcm",
+    //     key,
+    //     Buffer.from(iv, "base64"),
+    //   );
+    //   decipher.setAuthTag(Buffer.from(authTag, "base64"));
+    //   const decrypted =
+    //     decipher.update(Buffer.from(req.body, "base64"), undefined, "utf-8") +
+    //     decipher.final("utf-8");
+    //   payload = JSON.parse(decrypted);
+    // } else {
+    //   payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    // }
+
+    // notificationID = payload.notificationID;
+
     if (iv && authTag) {
       const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "utf-8");
       const decipher = crypto.createDecipheriv(
@@ -925,10 +943,17 @@ export const sibsWebhook = async (req, res) => {
         decipher.final("utf-8");
       payload = JSON.parse(decrypted);
     } else {
-      payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+      if (Buffer.isBuffer(req.body)) {
+        payload = JSON.parse(req.body.toString("utf-8"));
+      } else if (typeof req.body === "string") {
+        payload = JSON.parse(req.body);
+      } else {
+        payload = req.body;
+      }
     }
 
     notificationID = payload.notificationID;
+    console.log("[SIBS Webhook notificationID]", notificationID);
     const { paymentStatus, paymentType, paymentMethod, transactionID, amount } =
       payload;
 
