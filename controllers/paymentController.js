@@ -389,29 +389,48 @@ export const getPaymentPage = async (req, res) => {
 
 export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;
-
   console.log("Payment result received:", req.query);
 
+  const FINAL_STATUSES = ["Success", "Declined", "Failed", "Expired"];
+  const POLL_INTERVAL_MS = 3000; // check every 3 seconds
+  const MAX_ATTEMPTS = 20; // 20 × 3s = 60s max wait
+
+  let paymentStatus = "Pending";
   let isSuccess = false;
-  let paymentStatus = "Unknown";
 
-  try {
-    const { data } = await axios.get(
-      `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
-          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const { data } = await axios.get(
+        `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+            "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          },
         },
-      },
-    );
+      );
 
-    paymentStatus = data.paymentStatus;
-    isSuccess = paymentStatus === "Success";
-    console.log("[SIBS paymentResult]", transactionId, paymentStatus);
-  } catch (err) {
-    console.error("[SIBS paymentResult check failed]", err.response?.data);
+      paymentStatus = data.paymentStatus;
+      console.log(
+        `[SIBS MBWay poll] attempt ${attempt + 1} → ${paymentStatus}`,
+      );
+
+      if (FINAL_STATUSES.includes(paymentStatus)) {
+        isSuccess = paymentStatus === "Success";
+        break;
+      }
+    } catch (err) {
+      console.error("[SIBS paymentResult check failed]", err.response?.data);
+      break;
+    }
+
+    // wait before next poll
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
+
+  const timedOut = !["Success", "Declined", "Failed", "Expired"].includes(
+    paymentStatus,
+  );
 
   return res.send(`
     <!DOCTYPE html>
@@ -428,9 +447,14 @@ export const paymentResult = async (req, res) => {
       <body>
         <div class="box">
           ${
-            isSuccess
-              ? `<h2 style="color:#2e7d32">✅ Payment Complete</h2>`
-              : `<h2 style="color:#c62828">❌ Payment Failed</h2><p>Status: ${paymentStatus}</p>`
+            timedOut
+              ? `<h2 style="color:#e65100">⏳ Payment Pending</h2>
+               <p>Please confirm the payment in your MBWay app.</p>
+               <p>We'll notify you once it's confirmed.</p>`
+              : isSuccess
+                ? `<h2 style="color:#2e7d32">✅ Payment Complete</h2>`
+                : `<h2 style="color:#c62828">❌ Payment Failed</h2>
+                 <p>Status: ${paymentStatus}</p>`
           }
           <p>Transaction ID: ${transactionId}</p>
           <p>You can close this window.</p>
