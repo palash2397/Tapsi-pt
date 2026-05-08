@@ -1,5 +1,6 @@
 import axios from "axios";
 import crypto from "crypto";
+import { randomUUID } from "crypto";
 import Joi from "joi";
 import { Msg } from "../utils/responseMsg.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -1433,7 +1434,6 @@ export const createPaymentCIT = async (req, res) => {
       customerEmail,
     } = req.body;
 
-    
     const schema = Joi.object({
       amount: Joi.number().required(),
       customerEmail: Joi.string().email().optional(),
@@ -1449,11 +1449,18 @@ export const createPaymentCIT = async (req, res) => {
         .json(new ApiResponse(400, {}, error.details[0].message));
     }
 
+    console.log("[SIBS terminal debug]", {
+      raw: process.env.SIBS_TERMINAL,
+      asString: String(process.env.SIBS_TERMINAL),
+      asNumber: Number(process.env.SIBS_TERMINAL),
+      type: typeof process.env.SIBS_TERMINAL,
+    });
+
     const payload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
-        merchantTransactionId: `cit_${Date.now()}`,
+        merchantTransactionId: `cit_${randomUUID().replace(/-/g, "").substring(0, 31)}`,
       },
       customer: {
         customerInfo: { customerName, customerEmail },
@@ -1462,13 +1469,14 @@ export const createPaymentCIT = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         moto: false,
-        paymentType: "AUTH",
+        paymentType: "PURS",
         amount: { value: Number(amount), currency },
-        merchantInitiatedTransaction: {
-          type: "UCOF",
-          validityDate: "2027-12-31T00:00:00.000Z",
-          amountQualifier: "ESTIMATED",
-        },
+      },
+      merchantInitiatedTransaction: {
+        // ← moved to top level
+        type: "UCOF",
+        validityDate: "2027-12-31T00:00:00.000Z",
+        amountQualifier: "ESTIMATED",
       },
       info: {
         deviceInfo: {
@@ -1483,8 +1491,14 @@ export const createPaymentCIT = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
+      tokenisation: {
+        tokenisationRequest: {
+          tokeniseCard: true,
+        },
+      },
     };
 
+    console.log("[SIBS CIT payload]", JSON.stringify(payload, null, 2));
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
       headers: {
         Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
