@@ -357,13 +357,50 @@ export const getPaymentPage = async (req, res) => {
   }
 };
 
+
 // export const paymentResult = async (req, res) => {
 //   const { transactionId } = req.query;
-
 //   console.log("Payment result received:", req.query);
 
-//   // Just return a simple success page
-//   // Flutter will detect this URL and close WebView
+//   const FINAL_STATUSES = ["Success", "Declined", "Failed", "Expired"];
+//   const POLL_INTERVAL_MS = 3000; 
+//   const MAX_ATTEMPTS = 20; 
+
+//   let paymentStatus = "Pending";
+//   let isSuccess = false;
+
+//   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+//     try {
+//       const { data } = await axios.get(
+//         `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+//             "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+//           },
+//         },
+//       );
+
+//       paymentStatus = data.paymentStatus;
+//       console.log(
+//         `[SIBS MBWay poll] attempt ${attempt + 1} → ${paymentStatus}`,
+//       );
+
+//       if (FINAL_STATUSES.includes(paymentStatus)) {
+//         isSuccess = paymentStatus === "Success";
+//         break;
+//       }
+//     } catch (err) {
+//       console.error("[SIBS paymentResult check failed]", err.response?.data);
+//       break;
+//     }
+//     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+//   }
+
+//   const timedOut = !["Success", "Declined", "Failed", "Expired"].includes(
+//     paymentStatus,
+//   );
+
 //   return res.send(`
 //     <!DOCTYPE html>
 //     <html>
@@ -372,13 +409,22 @@ export const getPaymentPage = async (req, res) => {
 //         <style>
 //           body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; margin: 0; }
 //           .box { background: white; padding: 32px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-//           h2 { color: #2e7d32; }
+//           h2 { margin-bottom: 8px; }
 //           p { color: #666; }
 //         </style>
 //       </head>
 //       <body>
 //         <div class="box">
-//           <h2>✅ Payment Complete</h2>
+//           ${
+//             timedOut
+//               ? `<h2 style="color:#e65100">⏳ Payment Pending</h2>
+//                <p>Please confirm the payment in your MBWay app.</p>
+//                <p>We'll notify you once it's confirmed.</p>`
+//               : isSuccess
+//                 ? `<h2 style="color:#2e7d32">✅ Payment Complete</h2>`
+//                 : `<h2 style="color:#c62828">❌ Payment Failed</h2>
+//                  <p>Status: ${paymentStatus}</p>`
+//           }
 //           <p>Transaction ID: ${transactionId}</p>
 //           <p>You can close this window.</p>
 //         </div>
@@ -386,81 +432,6 @@ export const getPaymentPage = async (req, res) => {
 //     </html>
 //   `);
 // };
-
-export const paymentResult = async (req, res) => {
-  const { transactionId } = req.query;
-  console.log("Payment result received:", req.query);
-
-  const FINAL_STATUSES = ["Success", "Declined", "Failed", "Expired"];
-  const POLL_INTERVAL_MS = 3000; 
-  const MAX_ATTEMPTS = 20; 
-
-  let paymentStatus = "Pending";
-  let isSuccess = false;
-
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    try {
-      const { data } = await axios.get(
-        `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
-            "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
-          },
-        },
-      );
-
-      paymentStatus = data.paymentStatus;
-      console.log(
-        `[SIBS MBWay poll] attempt ${attempt + 1} → ${paymentStatus}`,
-      );
-
-      if (FINAL_STATUSES.includes(paymentStatus)) {
-        isSuccess = paymentStatus === "Success";
-        break;
-      }
-    } catch (err) {
-      console.error("[SIBS paymentResult check failed]", err.response?.data);
-      break;
-    }
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-  }
-
-  const timedOut = !["Success", "Declined", "Failed", "Expired"].includes(
-    paymentStatus,
-  );
-
-  return res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; margin: 0; }
-          .box { background: white; padding: 32px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-          h2 { margin-bottom: 8px; }
-          p { color: #666; }
-        </style>
-      </head>
-      <body>
-        <div class="box">
-          ${
-            timedOut
-              ? `<h2 style="color:#e65100">⏳ Payment Pending</h2>
-               <p>Please confirm the payment in your MBWay app.</p>
-               <p>We'll notify you once it's confirmed.</p>`
-              : isSuccess
-                ? `<h2 style="color:#2e7d32">✅ Payment Complete</h2>`
-                : `<h2 style="color:#c62828">❌ Payment Failed</h2>
-                 <p>Status: ${paymentStatus}</p>`
-          }
-          <p>Transaction ID: ${transactionId}</p>
-          <p>You can close this window.</p>
-        </div>
-      </body>
-    </html>
-  `);
-};
 
 export const payWithSavedCard = async (req, res) => {
   try {
