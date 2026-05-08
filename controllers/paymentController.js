@@ -1430,21 +1430,30 @@ export const createPaymentCIT = async (req, res) => {
       currency = "EUR",
       description = "Tapsi Ride Payment",
       customerName = "Customer",
-      customerEmail = "customer@example.com",
-      type = "UCOF", // "UCOF" or "RCRR"
-      validityDate = "2027-12-31T00:00:00.000Z", // how long agreement is valid
+      customerEmail,
     } = req.body;
 
-    if (!amount)
+    
+    const schema = Joi.object({
+      amount: Joi.number().required(),
+      customerEmail: Joi.string().email().optional(),
+      description: Joi.string().optional(),
+      customerName: Joi.string().optional(),
+      currency: Joi.string().optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "amount is required"));
+        .json(new ApiResponse(400, {}, error.details[0].message));
+    }
 
     const payload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
         channel: "web",
-        merchantTransactionId: `txn_${Date.now()}`,
+        merchantTransactionId: `cit_${Date.now()}`,
       },
       customer: {
         customerInfo: { customerName, customerEmail },
@@ -1453,13 +1462,12 @@ export const createPaymentCIT = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         moto: false,
-        paymentType: "PURS",
+        paymentType: "AUTH",
         amount: { value: Number(amount), currency },
-        // ← This registers the MIT agreement
         merchantInitiatedTransaction: {
-          type, // "UCOF"
-          validityDate, // agreement validity
-          amountQualifier: "ESTIMATED", // mandatory for UCOF
+          type: "UCOF",
+          validityDate: "2027-12-31T00:00:00.000Z",
+          amountQualifier: "ESTIMATED",
         },
       },
       info: {
@@ -1489,13 +1497,13 @@ export const createPaymentCIT = async (req, res) => {
       new ApiResponse(
         200,
         {
-          transactionId: data.transactionID, // ← save this as CIT transactionId
+          transactionId: data.transactionID,
           formContext: data.formContext,
           transactionSignature: data.transactionSignature,
           paymentMethodList: data.paymentMethodList,
           checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
         },
-        Msg.CIT_CREATED_SUCCESSFULLY,
+        "CIT payment created successfully",
       ),
     );
   } catch (error) {
