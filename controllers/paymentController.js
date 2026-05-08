@@ -357,14 +357,13 @@ export const getPaymentPage = async (req, res) => {
   }
 };
 
-
 // export const paymentResult = async (req, res) => {
 //   const { transactionId } = req.query;
 //   console.log("Payment result received:", req.query);
 
 //   const FINAL_STATUSES = ["Success", "Declined", "Failed", "Expired"];
-//   const POLL_INTERVAL_MS = 3000; 
-//   const MAX_ATTEMPTS = 20; 
+//   const POLL_INTERVAL_MS = 3000;
+//   const MAX_ATTEMPTS = 20;
 
 //   let paymentStatus = "Pending";
 //   let isSuccess = false;
@@ -432,8 +431,6 @@ export const getPaymentPage = async (req, res) => {
 //     </html>
 //   `);
 // };
-
-
 
 export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;
@@ -513,6 +510,23 @@ export const paymentResult = async (req, res) => {
   `);
 };
 
+export const getPaymentStatus = async (req, res) => {
+  const { transactionId } = req.query;
+  try {
+    const { data } = await axios.get(
+      `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+        },
+      },
+    );
+    return res.json({ paymentStatus: data.paymentStatus });
+  } catch (err) {
+    return res.status(500).json({ paymentStatus: "Unknown" });
+  }
+};
 
 export const payWithSavedCard = async (req, res) => {
   try {
