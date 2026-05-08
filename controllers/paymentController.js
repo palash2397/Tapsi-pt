@@ -467,7 +467,7 @@ export const paymentResult = async (req, res) => {
 
           async function checkStatus() {
             try {
-              const res = await fetch("/api/v1/payment/status?transactionId=" + transactionId);
+              const res = await fetch("${process.env.BASE_URL}/payment/status?transactionId=" + transactionId);
               const data = await res.json();
               const status = data.paymentStatus;
 
