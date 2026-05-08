@@ -1424,6 +1424,103 @@ export const sibsWebhook = async (req, res) => {
 //   }
 // };
 
+export const createAuthWithSavedCard = async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = "EUR",
+      description = "Ride booking",
+      token,
+      initialTransactionId,   // ← original CIT transactionId saved in DB
+    } = req.body;
+
+    const schema = Joi.object({
+      amount: Joi.number().positive().required(),
+      token: Joi.string().required(),
+      initialTransactionId: Joi.string().required(),
+      currency: Joi.string().optional(),
+      description: Joi.string().optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json(new ApiResponse(400, {}, error.details[0].message));
+    }
+
+    const payload = {
+      merchant: {
+        terminalId: Number(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `auth_${randomUUID().replace(/-/g, "").substring(0, 31)}`,
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        moto: false,
+        paymentType: "AUTH",          // ← hold funds, capture later
+        amount: { value: Number(amount), currency },
+        originalTransaction: {
+          id: initialTransactionId,   // ← reference to original CIT
+        },
+      },
+      tokenisation: {
+        paymentTokens: [
+          {
+            tokenType: "Card",
+            value: token,
+          },
+        ],
+      },
+      merchantInitiatedTransaction: {
+        type: "UCOF",
+        validityDate: "2027-12-31T00:00:00.000Z",
+        amountQualifier: "ESTIMATED",
+      },
+    };
+
+    console.log("[SIBS MIT AUTH payload]", JSON.stringify(payload, null, 2));
+
+    const { data } = await axios.post(
+      `${process.env.SIBS_BASE_URL}/api/v2/payments/${initialTransactionId}/mit`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("[SIBS MIT AUTH response]", JSON.stringify(data, null, 2));
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          status: data.paymentStatus,
+          returnCode: data.returnStatus?.statusCode,
+          amount: data.amount,
+        },
+        Msg.AUTH_CREATED_WITH_SAVED_CARD,
+      )
+    );
+
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error("[SIBS createAuthWithSavedCard error]", status, error.response?.data);
+    return res.status(status).json(
+      new ApiResponse(
+        status,
+        {},
+        error.response?.data?.returnStatus?.statusMsg || error.message,
+      )
+    );
+  }
+};
+
+
 export const createPaymentCIT = async (req, res) => {
   try {
     const {
