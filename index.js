@@ -38,7 +38,7 @@ app.listen(PORT, () => {
   console.log(
     chalk.blue("║") +
       "  " +
-      chalk.cyan("TASPSI") +
+      chalk.cyan("TAPSI") +
       " " +
       chalk.white("is running on port") +
       " " +
