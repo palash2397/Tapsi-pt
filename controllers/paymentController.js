@@ -392,8 +392,8 @@ export const paymentResult = async (req, res) => {
   console.log("Payment result received:", req.query);
 
   const FINAL_STATUSES = ["Success", "Declined", "Failed", "Expired"];
-  const POLL_INTERVAL_MS = 3000; // check every 3 seconds
-  const MAX_ATTEMPTS = 20; // 20 × 3s = 60s max wait
+  const POLL_INTERVAL_MS = 3000; 
+  const MAX_ATTEMPTS = 20; 
 
   let paymentStatus = "Pending";
   let isSuccess = false;
@@ -423,8 +423,6 @@ export const paymentResult = async (req, res) => {
       console.error("[SIBS paymentResult check failed]", err.response?.data);
       break;
     }
-
-    // wait before next poll
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
