@@ -436,7 +436,6 @@ export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;
   console.log("Payment result received:", req.query);
 
-  // immediately return the page — no server-side polling
   return res.send(`
     <!DOCTYPE html>
     <html>
@@ -495,7 +494,7 @@ export const paymentResult = async (req, res) => {
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("title").textContent = "⏳ Payment Pending";
                 document.getElementById("title").style.color = "#e65100";
-                document.getElementById("msg").textContent = "Please confirm the payment in your MBWay app.";
+                document.getElementById("msg").textContent = "Payment is taking longer than expected. Please check your app or try again.";
               }
             } catch (err) {
               attempts++;
@@ -1302,6 +1301,10 @@ export const sibsWebhook = async (req, res) => {
 
       CANC: () => {
         console.log(`[CANC] Authorization cancelled for txn ${transactionID}`);
+      },
+
+      MITR: () => {
+        console.log(`[MITR] MIT - txn: ${transactionID}`);
       },
     };
 
