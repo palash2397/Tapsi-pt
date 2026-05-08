@@ -433,6 +433,87 @@ export const getPaymentPage = async (req, res) => {
 //   `);
 // };
 
+
+
+export const paymentResult = async (req, res) => {
+  const { transactionId } = req.query;
+  console.log("Payment result received:", req.query);
+
+  // immediately return the page — no server-side polling
+  return res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; margin: 0; }
+          .box { background: white; padding: 32px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+          h2 { margin-bottom: 8px; }
+          p { color: #666; }
+          .spinner { width: 32px; height: 32px; border: 4px solid #f0f0f0; border-top: 4px solid #e65100; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+          @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="box" id="status-box">
+          <div class="spinner" id="spinner"></div>
+          <h2 style="color:#e65100" id="title">⏳ Checking Payment...</h2>
+          <p id="msg">Please wait while we confirm your payment.</p>
+          <p style="margin-top:12px;font-size:13px;color:#aaa">Transaction ID: ${transactionId}</p>
+        </div>
+
+        <script>
+          const transactionId = "${transactionId}";
+          const FINAL = ["Success", "Declined", "Failed", "Expired"];
+          let attempts = 0;
+          const MAX = 20; // 20 × 3s = 60s
+
+          async function checkStatus() {
+            try {
+              const res = await fetch("/api/v1/payment/status?transactionId=" + transactionId);
+              const data = await res.json();
+              const status = data.paymentStatus;
+
+              if (status === "Success") {
+                document.getElementById("spinner").style.display = "none";
+                document.getElementById("title").textContent = "✅ Payment Complete";
+                document.getElementById("title").style.color = "#2e7d32";
+                document.getElementById("msg").textContent = "Your payment was confirmed.";
+                return;
+              }
+
+              if (["Declined", "Failed", "Expired"].includes(status)) {
+                document.getElementById("spinner").style.display = "none";
+                document.getElementById("title").textContent = "❌ Payment Failed";
+                document.getElementById("title").style.color = "#c62828";
+                document.getElementById("msg").textContent = "Status: " + status;
+                return;
+              }
+
+              // still pending
+              attempts++;
+              if (attempts < MAX) {
+                setTimeout(checkStatus, 3000);
+              } else {
+                document.getElementById("spinner").style.display = "none";
+                document.getElementById("title").textContent = "⏳ Payment Pending";
+                document.getElementById("title").style.color = "#e65100";
+                document.getElementById("msg").textContent = "Please confirm the payment in your MBWay app.";
+              }
+            } catch (err) {
+              attempts++;
+              if (attempts < MAX) setTimeout(checkStatus, 3000);
+            }
+          }
+
+          setTimeout(checkStatus, 3000);
+        </script>
+      </body>
+    </html>
+  `);
+};
+
+
 export const payWithSavedCard = async (req, res) => {
   try {
     const { name, token, email, amount = 0.1, currency = "EUR" } = req.body;
