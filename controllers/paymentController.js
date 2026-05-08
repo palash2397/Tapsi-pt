@@ -357,13 +357,62 @@ export const getPaymentPage = async (req, res) => {
   }
 };
 
+// export const paymentResult = async (req, res) => {
+//   const { transactionId } = req.query;
+
+//   console.log("Payment result received:", req.query);
+
+//   // Just return a simple success page
+//   // Flutter will detect this URL and close WebView
+//   return res.send(`
+//     <!DOCTYPE html>
+//     <html>
+//       <head>
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//         <style>
+//           body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; margin: 0; }
+//           .box { background: white; padding: 32px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+//           h2 { color: #2e7d32; }
+//           p { color: #666; }
+//         </style>
+//       </head>
+//       <body>
+//         <div class="box">
+//           <h2>✅ Payment Complete</h2>
+//           <p>Transaction ID: ${transactionId}</p>
+//           <p>You can close this window.</p>
+//         </div>
+//       </body>
+//     </html>
+//   `);
+// };
+
 export const paymentResult = async (req, res) => {
   const { transactionId } = req.query;
 
   console.log("Payment result received:", req.query);
 
-  // Just return a simple success page
-  // Flutter will detect this URL and close WebView
+  let isSuccess = false;
+  let paymentStatus = "Unknown";
+
+  try {
+    const { data } = await axios.get(
+      `${process.env.SIBS_PAYMENT_URL}/${transactionId}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+          "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+        },
+      },
+    );
+
+    paymentStatus = data.paymentStatus;
+    isSuccess = paymentStatus === "Success";
+    console.log("[SIBS paymentResult]", transactionId, paymentStatus);
+  } catch (err) {
+    console.error("[SIBS paymentResult check failed]", err.response?.data);
+  }
+
   return res.send(`
     <!DOCTYPE html>
     <html>
@@ -372,13 +421,17 @@ export const paymentResult = async (req, res) => {
         <style>
           body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; margin: 0; }
           .box { background: white; padding: 32px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-          h2 { color: #2e7d32; }
+          h2 { margin-bottom: 8px; }
           p { color: #666; }
         </style>
       </head>
       <body>
         <div class="box">
-          <h2>✅ Payment Complete</h2>
+          ${
+            isSuccess
+              ? `<h2 style="color:#2e7d32">✅ Payment Complete</h2>`
+              : `<h2 style="color:#c62828">❌ Payment Failed</h2><p>Status: ${paymentStatus}</p>`
+          }
           <p>Transaction ID: ${transactionId}</p>
           <p>You can close this window.</p>
         </div>
