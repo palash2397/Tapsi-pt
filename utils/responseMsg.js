@@ -53,6 +53,10 @@ export const Msg = {
   AUTH_CREATED_WITH_SAVED_CARD: `Auth created with saved card`,
   AMOUNT_AND_TOKEN_REQUIRED: `Amount and token are required`,
   SIBS_ERROR: `SIBS error`,
+
+
+  // CIT
+  CIT_CREATED_SUCCESSFULLY: `CIT created successfully`,
   
 
 };

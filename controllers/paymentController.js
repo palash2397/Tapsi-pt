@@ -1231,7 +1231,6 @@ export const sibsWebhook = async (req, res) => {
 
     let payload;
 
-    // 🔐 Encrypted webhook from SIBS
     if (iv && authTag) {
       const key = Buffer.from(process.env.SIBS_WEBHOOK_KEY, "base64");
 
@@ -1253,10 +1252,7 @@ export const sibsWebhook = async (req, res) => {
       payload = JSON.parse(decrypted);
 
       console.log("[SIBS Webhook decrypted]", payload);
-    }
-
-    // 🟢 Plain JSON webhook
-    else {
+    } else {
       if (Buffer.isBuffer(req.body)) {
         payload = JSON.parse(req.body.toString("utf-8"));
       } else if (typeof req.body === "string") {
@@ -1308,27 +1304,19 @@ export const sibsWebhook = async (req, res) => {
       },
     };
 
-    // ✅ Success
     if (paymentStatus === "Success" && handlers[paymentType]) {
       handlers[paymentType]();
-    }
-
-    // ❌ Declined
-    else if (paymentStatus === "Declined") {
+    } else if (paymentStatus === "Declined") {
       console.warn(
         `[SIBS Webhook] Declined - txn: ${transactionID}, method: ${paymentMethod}`,
       );
-    }
-
-    // ⏳ Pending
-    else if (paymentStatus === "Pending") {
+    } else if (paymentStatus === "Pending") {
       console.log(`[SIBS Webhook] Pending - txn: ${transactionID}`);
     }
   } catch (error) {
     console.error("[SIBS Webhook error]", error.message);
   }
 
-  // ✅ IMPORTANT: return same notificationID
   return res.status(200).json({
     statusCode: "200",
     statusMsg: "Success",
@@ -1420,6 +1408,100 @@ export const createAuthWithSavedCard = async (req, res) => {
     const status = error.response?.status || 500;
     console.error(
       "[SIBS createAuthWithSavedCard error]",
+      status,
+      error.response?.data,
+    );
+    return res
+      .status(status)
+      .json(
+        new ApiResponse(
+          status,
+          {},
+          error.response?.data?.returnStatus?.statusMsg || error.message,
+        ),
+      );
+  }
+};
+
+export const createPaymentCIT = async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = "EUR",
+      description = "Tapsi Ride Payment",
+      customerName = "Customer",
+      customerEmail = "customer@example.com",
+      type = "UCOF", // "UCOF" or "RCRR"
+      validityDate = "2027-12-31T00:00:00.000Z", // how long agreement is valid
+    } = req.body;
+
+    if (!amount)
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "amount is required"));
+
+    const payload = {
+      merchant: {
+        terminalId: Number(process.env.SIBS_TERMINAL),
+        channel: "web",
+        merchantTransactionId: `txn_${Date.now()}`,
+      },
+      customer: {
+        customerInfo: { customerName, customerEmail },
+      },
+      transaction: {
+        transactionTimestamp: new Date().toISOString(),
+        description,
+        moto: false,
+        paymentType: "PURS",
+        amount: { value: Number(amount), currency },
+        // ← This registers the MIT agreement
+        merchantInitiatedTransaction: {
+          type, // "UCOF"
+          validityDate, // agreement validity
+          amountQualifier: "ESTIMATED", // mandatory for UCOF
+        },
+      },
+      info: {
+        deviceInfo: {
+          browserAcceptHeader: req.headers["accept"] || "text/html",
+          browserJavaEnabled: "false",
+          browserLanguage:
+            req.headers["accept-language"]?.split(",")[0] || "en",
+          browserColorDepth: "24",
+          browserScreenHeight: "1080",
+          browserScreenWidth: "1920",
+          browserTZ: "0",
+          browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
+        },
+      },
+    };
+
+    const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
+      headers: {
+        Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+        "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID, // ← save this as CIT transactionId
+          formContext: data.formContext,
+          transactionSignature: data.transactionSignature,
+          paymentMethodList: data.paymentMethodList,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+        },
+        Msg.CIT_CREATED_SUCCESSFULLY,
+      ),
+    );
+  } catch (error) {
+    const status = error.response?.status || 500;
+    console.error(
+      "[SIBS createPaymentCIT error]",
       status,
       error.response?.data,
     );
