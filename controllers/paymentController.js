@@ -1512,12 +1512,12 @@ export const createPaymentCIT = async (req, res) => {
         200,
         {
           transactionId: data.transactionID,
-          formContext: data.formContext,
+          // formContext: data.formContext,
           transactionSignature: data.transactionSignature,
           paymentMethodList: data.paymentMethodList,
           checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
         },
-        "CIT payment created successfully",
+        Msg.CIT_CREATED_SUCCESSFULLY,
       ),
     );
   } catch (error) {
