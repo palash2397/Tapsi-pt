@@ -14,6 +14,7 @@ import {
   getPaymentStatus,
   createPaymentCIT,
   createAuthWithMbway,
+  createAuthWithCard,
   createPaymentDirectCIT
 } from "../controllers/paymentController.js";
 
@@ -32,6 +33,7 @@ paymentRouter.post("/cancel", cancelPayment);
 paymentRouter.get("/status", getPaymentStatus);
 paymentRouter.patch("/auth/saved/card", createAuthWithSavedCard);
 paymentRouter.post("/auth/mbway", createAuthWithMbway);
+paymentRouter.post("/auth/card", createAuthWithCard);
 paymentRouter.post("/pay/card/cit", createPaymentDirectCIT);
 paymentRouter.post("/create/cit", createPaymentCIT);
 
