@@ -888,7 +888,6 @@ export const payWithSavedCardMIT = async (req, res) => {
 //   }
 // };
 
-
 export const createAuth = async (req, res) => {
   try {
     const {
@@ -897,10 +896,13 @@ export const createAuth = async (req, res) => {
       description = "Tapsi Ride Payment",
       customerName = "Customer",
       customerEmail = "customer@example.com",
-      saveCard = false,   // ← Flutter sends this flag
+      saveCard = false,
     } = req.body;
 
-    if (!amount) return res.status(400).json(new ApiResponse(400, {}, "amount is required"));
+    if (!amount)
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "amount is required"));
 
     const payload = {
       merchant: {
@@ -918,7 +920,7 @@ export const createAuth = async (req, res) => {
         paymentType: "AUTH",
         amount: { value: Number(amount), currency },
 
-        // ← Add this ONLY if user wants to save card
+      
         ...(saveCard && {
           merchantInitiatedTransaction: {
             type: "UCOF",
@@ -931,7 +933,8 @@ export const createAuth = async (req, res) => {
         deviceInfo: {
           browserAcceptHeader: req.headers["accept"] || "text/html",
           browserJavaEnabled: "false",
-          browserLanguage: req.headers["accept-language"]?.split(",")[0] || "en",
+          browserLanguage:
+            req.headers["accept-language"]?.split(",")[0] || "en",
           browserColorDepth: "24",
           browserScreenHeight: "1080",
           browserScreenWidth: "1920",
@@ -940,7 +943,7 @@ export const createAuth = async (req, res) => {
         },
       },
 
-      // ← Save card token ONLY if user wants to save
+
       ...(saveCard && {
         tokenisation: {
           tokenisationRequest: { tokeniseCard: true },
@@ -957,22 +960,31 @@ export const createAuth = async (req, res) => {
     });
 
     return res.status(200).json(
-      new ApiResponse(200, {
-        transactionId: data.transactionID,
-        formContext: data.formContext,
-        transactionSignature: data.transactionSignature,
-        paymentMethodList: data.paymentMethodList,
-        checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
-        saveCard,   // ← echo back so Flutter knows
-      }, Msg.PAYMENT_CREATED_SUCCESSFULLY)
+      new ApiResponse(
+        200,
+        {
+          transactionId: data.transactionID,
+          formContext: data.formContext,
+          transactionSignature: data.transactionSignature,
+          paymentMethodList: data.paymentMethodList,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+          saveCard, 
+        },
+        Msg.PAYMENT_CREATED_SUCCESSFULLY,
+      ),
     );
-
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createAuth error]", status, error.response?.data);
-    return res.status(status).json(
-      new ApiResponse(status, {}, error.response?.data?.returnStatus?.statusMsg || error.message)
-    );
+    return res
+      .status(status)
+      .json(
+        new ApiResponse(
+          status,
+          {},
+          error.response?.data?.returnStatus?.statusMsg || error.message,
+        ),
+      );
   }
 };
 
@@ -1527,7 +1539,7 @@ export const sibsWebhook = async (req, res) => {
 //       amount: Joi.number().positive().required(),
 //       token: Joi.string().required(),
 //       initialTransactionId: Joi.string().required(),
-//       // transactionSignature: Joi.string().required(),  
+//       // transactionSignature: Joi.string().required(),
 //       currency: Joi.string().optional(),
 //       description: Joi.string().optional(),
 //     });
@@ -1614,7 +1626,6 @@ export const sibsWebhook = async (req, res) => {
 //       );
 //   }
 // };
-
 
 export const createAuthWithSavedCard = async (req, res) => {
   try {
@@ -1739,18 +1750,19 @@ export const createAuthWithSavedCard = async (req, res) => {
       error.response?.data,
     );
 
-    return res.status(status).json(
-      new ApiResponse(
-        status,
-        { raw: error.response?.data || null },
-        error.response?.data?.statusMsg ||
-          error.response?.data?.returnStatus?.statusMsg ||
-          error.message,
-      ),
-    );
+    return res
+      .status(status)
+      .json(
+        new ApiResponse(
+          status,
+          { raw: error.response?.data || null },
+          error.response?.data?.statusMsg ||
+            error.response?.data?.returnStatus?.statusMsg ||
+            error.message,
+        ),
+      );
   }
 };
-
 
 export const createPaymentCIT = async (req, res) => {
   try {
