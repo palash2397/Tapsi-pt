@@ -896,7 +896,7 @@ export const createAuth = async (req, res) => {
       description = "Tapsi Ride Payment",
       customerName = "Customer",
       customerEmail = "customer@example.com",
-      saveCard = false,
+      saveCard,
     } = req.body;
 
     if (!amount)
@@ -917,15 +917,8 @@ export const createAuth = async (req, res) => {
         transactionTimestamp: new Date().toISOString(),
         description,
         moto: false,
-        paymentType: "AUTH",
+        paymentType: saveCard ? "PURS" : "AUTH",
         amount: { value: Number(amount), currency },
-        ...(saveCard && {
-          merchantInitiatedTransaction: {
-            type: "UCOF",
-            validityDate: "2027-12-31T00:00:00.000Z",
-            amountQualifier: "ESTIMATED",
-          },
-        }),
       },
       info: {
         deviceInfo: {
@@ -940,14 +933,16 @@ export const createAuth = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
-      // ← NO tokenisationRequest at all when saveCard: true
-      // SIBS stores card linked to citTransactionId internally for MIT
-      ...(!saveCard && {
-        tokenisation: {
-          tokenisationRequest: { tokeniseCard: true },
+      // ← Move outside transaction as top level
+      ...(saveCard && {
+        merchantInitiatedTransaction: {
+          type: "UCOF",
+          validityDate: "2027-12-31T00:00:00.000Z",
+          amountQualifier: "ESTIMATED",
         },
       }),
     };
+    console.log("[SIBS createAuth payload]", JSON.stringify(payload, null, 2));
 
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
       headers: {
