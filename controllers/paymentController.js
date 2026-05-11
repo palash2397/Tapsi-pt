@@ -919,8 +919,6 @@ export const createAuth = async (req, res) => {
         moto: false,
         paymentType: "AUTH",
         amount: { value: Number(amount), currency },
-
-      
         ...(saveCard && {
           merchantInitiatedTransaction: {
             type: "UCOF",
@@ -942,9 +940,9 @@ export const createAuth = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
-
-
-      ...(saveCard && {
+      // ← NO tokenisationRequest at all when saveCard: true
+      // SIBS stores card linked to citTransactionId internally for MIT
+      ...(!saveCard && {
         tokenisation: {
           tokenisationRequest: { tokeniseCard: true },
         },
@@ -964,11 +962,11 @@ export const createAuth = async (req, res) => {
         200,
         {
           transactionId: data.transactionID,
-          formContext: data.formContext,
+          // formContext: data.formContext,
           transactionSignature: data.transactionSignature,
           paymentMethodList: data.paymentMethodList,
           checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
-          saveCard, 
+          saveCard,
         },
         Msg.PAYMENT_CREATED_SUCCESSFULLY,
       ),
