@@ -12,7 +12,8 @@ import {
   cancelPayment,
   createAuthWithSavedCard,
   getPaymentStatus,
-  createPaymentCIT
+  createPaymentCIT,
+  createAuthWithMbway
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -29,6 +30,7 @@ paymentRouter.patch("/capture", capturePayment);
 paymentRouter.post("/cancel", cancelPayment);
 paymentRouter.get("/status", getPaymentStatus);
 paymentRouter.patch("/auth/saved/card", createAuthWithSavedCard);
+paymentRouter.post("/auth/mbway", createAuthWithMbway);
 paymentRouter.post("/create/cit", createPaymentCIT);
 
 export default paymentRouter;
