@@ -1072,7 +1072,7 @@ export const createPaymentDirectCIT = async (req, res) => {
       amount,
       currency = "EUR",
       description = "Tapsi Ride Payment",
-      citTransactionId,   // ← saved transactionId from first payment
+      citTransactionId,   
     } = req.body;
 
     const schema = Joi.object({

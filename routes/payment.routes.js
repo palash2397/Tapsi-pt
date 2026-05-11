@@ -13,7 +13,8 @@ import {
   createAuthWithSavedCard,
   getPaymentStatus,
   createPaymentCIT,
-  createAuthWithMbway
+  createAuthWithMbway,
+  createPaymentDirectCIT
 } from "../controllers/paymentController.js";
 
 const paymentRouter = Router();
@@ -31,6 +32,7 @@ paymentRouter.post("/cancel", cancelPayment);
 paymentRouter.get("/status", getPaymentStatus);
 paymentRouter.patch("/auth/saved/card", createAuthWithSavedCard);
 paymentRouter.post("/auth/mbway", createAuthWithMbway);
+paymentRouter.post("/pay/card/cit", createPaymentDirectCIT);
 paymentRouter.post("/create/cit", createPaymentCIT);
 
 export default paymentRouter;
