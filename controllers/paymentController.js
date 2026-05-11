@@ -933,7 +933,7 @@ export const createAuth = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
-      // ← Move outside transaction as top level
+
       ...(saveCard && {
         merchantInitiatedTransaction: {
           type: "UCOF",
@@ -957,10 +957,9 @@ export const createAuth = async (req, res) => {
         200,
         {
           transactionId: data.transactionID,
-          // formContext: data.formContext,
           transactionSignature: data.transactionSignature,
           paymentMethodList: data.paymentMethodList,
-          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}&paymentMethod=${saveCard ? "CARD" : "CARD,MBWAY"}`,
           saveCard,
         },
         Msg.PAYMENT_CREATED_SUCCESSFULLY,
