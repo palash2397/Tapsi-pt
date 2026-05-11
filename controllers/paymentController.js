@@ -767,57 +767,140 @@ export const payWithSavedCardMIT = async (req, res) => {
   }
 };
 
+// export const createAuth = async (req, res) => {
+//   try {
+//     const {
+//       amount,
+//       description,
+//       currency = "EUR",
+//       customerName,
+//       customerEmail,
+//     } = req.body;
+
+//     console.log("[SIBS createAuth data]", req.body);
+
+//     if (!amount) {
+//       return res
+//         .status(400)
+//         .json(new ApiResponse(400, {}, Msg.AMOUNT_REQUIRED));
+//     }
+
+//     // const payload = {
+//     //   merchant: {
+//     //     terminalId: Number(process.env.SIBS_TERMINAL),
+//     //     channel: "web",
+//     //     merchantTransactionId: `auth_${Date.now()}`,
+//     //   },
+//     //   customer: {
+//     //     customerInfo: { customerName, customerEmail },
+//     //   },
+//     //   transaction: {
+//     //     transactionTimestamp: new Date().toISOString(),
+//     //     description,
+//     //     moto: false,
+//     //     paymentType: "AUTH", // ← AUTH not PURS
+//     //     amount: { value: Number(amount), currency },
+//     //   },
+//     //   info: {
+//     //     deviceInfo: {
+//     //       browserAcceptHeader: req.headers["accept"] || "text/html",
+//     //       browserJavaEnabled: "false",
+//     //       browserLanguage:
+//     //         req.headers["accept-language"]?.split(",")[0] || "en",
+//     //       browserColorDepth: "24",
+//     //       browserScreenHeight: "1080",
+//     //       browserScreenWidth: "1920",
+//     //       browserTZ: "0",
+//     //       browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
+//     //     },
+//     //   }
+//     //   // tokenisation: {
+//     //   //   tokenisationRequest: { tokeniseCard: true },
+//     //   // },
+//     // };
+
+//     const payload = {
+//       merchant: {
+//         terminalId: Number(process.env.SIBS_TERMINAL),
+//         channel: "web",
+//         merchantTransactionId: `auth_${Date.now()}`,
+//       },
+//       customer: {
+//         customerInfo: { customerName, customerEmail },
+//       },
+//       transaction: {
+//         transactionTimestamp: new Date().toISOString(),
+//         description,
+//         moto: false,
+//         paymentType: "AUTH",
+//         amount: { value: Number(amount), currency },
+//       },
+//       info: {
+//         deviceInfo: {
+//           browserAcceptHeader: req.headers["accept"] || "text/html",
+//           browserJavaEnabled: "false",
+//           browserLanguage:
+//             req.headers["accept-language"]?.split(",")[0] || "en",
+//           browserColorDepth: "24",
+//           browserScreenHeight: "1080",
+//           browserScreenWidth: "1920",
+//           browserTZ: "0",
+//           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
+//         },
+//       },
+//       tokenisation: {
+//         tokenisationRequest: { tokeniseCard: true },
+//       },
+//     };
+//     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
+//       headers: {
+//         Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
+//         "x-ibm-client-id": process.env.SIBS_CLIENT_ID,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     return res.status(200).json(
+//       new ApiResponse(
+//         200,
+//         {
+//           transactionId: data.transactionID,
+//           // formContext: data.formContext,
+//           transactionSignature: data.transactionSignature,
+//           paymentMethodList: data.paymentMethodList,
+//           checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+//         },
+//         Msg.PAYMENT_CREATED_SUCCESSFULLY,
+//       ),
+//     );
+//   } catch (error) {
+//     const status = error.response?.status || 500;
+//     console.error("[SIBS createAuth error]", status, error.response?.data);
+//     return res
+//       .status(500)
+//       .json(
+//         new ApiResponse(
+//           500,
+//           {},
+//           error.response?.data?.returnStatus?.statusMsg || error.message,
+//         ),
+//       );
+//   }
+// };
+
+
 export const createAuth = async (req, res) => {
   try {
     const {
       amount,
-      description,
       currency = "EUR",
-      customerName,
-      customerEmail,
+      description = "Tapsi Ride Payment",
+      customerName = "Customer",
+      customerEmail = "customer@example.com",
+      saveCard = false,   // ← Flutter sends this flag
     } = req.body;
 
-    console.log("[SIBS createAuth data]", req.body);
-
-    if (!amount) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, Msg.AMOUNT_REQUIRED));
-    }
-
-    // const payload = {
-    //   merchant: {
-    //     terminalId: Number(process.env.SIBS_TERMINAL),
-    //     channel: "web",
-    //     merchantTransactionId: `auth_${Date.now()}`,
-    //   },
-    //   customer: {
-    //     customerInfo: { customerName, customerEmail },
-    //   },
-    //   transaction: {
-    //     transactionTimestamp: new Date().toISOString(),
-    //     description,
-    //     moto: false,
-    //     paymentType: "AUTH", // ← AUTH not PURS
-    //     amount: { value: Number(amount), currency },
-    //   },
-    //   info: {
-    //     deviceInfo: {
-    //       browserAcceptHeader: req.headers["accept"] || "text/html",
-    //       browserJavaEnabled: "false",
-    //       browserLanguage:
-    //         req.headers["accept-language"]?.split(",")[0] || "en",
-    //       browserColorDepth: "24",
-    //       browserScreenHeight: "1080",
-    //       browserScreenWidth: "1920",
-    //       browserTZ: "0",
-    //       browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
-    //     },
-    //   }
-    //   // tokenisation: {
-    //   //   tokenisationRequest: { tokeniseCard: true },
-    //   // },
-    // };
+    if (!amount) return res.status(400).json(new ApiResponse(400, {}, "amount is required"));
 
     const payload = {
       merchant: {
@@ -834,13 +917,21 @@ export const createAuth = async (req, res) => {
         moto: false,
         paymentType: "AUTH",
         amount: { value: Number(amount), currency },
+
+        // ← Add this ONLY if user wants to save card
+        ...(saveCard && {
+          merchantInitiatedTransaction: {
+            type: "UCOF",
+            validityDate: "2027-12-31T00:00:00.000Z",
+            amountQualifier: "ESTIMATED",
+          },
+        }),
       },
       info: {
         deviceInfo: {
           browserAcceptHeader: req.headers["accept"] || "text/html",
           browserJavaEnabled: "false",
-          browserLanguage:
-            req.headers["accept-language"]?.split(",")[0] || "en",
+          browserLanguage: req.headers["accept-language"]?.split(",")[0] || "en",
           browserColorDepth: "24",
           browserScreenHeight: "1080",
           browserScreenWidth: "1920",
@@ -848,10 +939,15 @@ export const createAuth = async (req, res) => {
           browserUserAgent: req.headers["user-agent"] || "Mozilla/5.0",
         },
       },
-      tokenisation: {
-        tokenisationRequest: { tokeniseCard: true },
-      },
+
+      // ← Save card token ONLY if user wants to save
+      ...(saveCard && {
+        tokenisation: {
+          tokenisationRequest: { tokeniseCard: true },
+        },
+      }),
     };
+
     const { data } = await axios.post(process.env.SIBS_PAYMENT_URL, payload, {
       headers: {
         Authorization: `Bearer ${process.env.SIBS_BEARER_TOKEN}`,
@@ -861,30 +957,22 @@ export const createAuth = async (req, res) => {
     });
 
     return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          transactionId: data.transactionID,
-          // formContext: data.formContext,
-          transactionSignature: data.transactionSignature,
-          paymentMethodList: data.paymentMethodList,
-          checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
-        },
-        Msg.PAYMENT_CREATED_SUCCESSFULLY,
-      ),
+      new ApiResponse(200, {
+        transactionId: data.transactionID,
+        formContext: data.formContext,
+        transactionSignature: data.transactionSignature,
+        paymentMethodList: data.paymentMethodList,
+        checkoutPageUrl: `${process.env.BASE_URL}/payment/page?transactionId=${data.transactionID}&formContext=${encodeURIComponent(data.formContext)}&amount=${amount}&currency=${currency}`,
+        saveCard,   // ← echo back so Flutter knows
+      }, Msg.PAYMENT_CREATED_SUCCESSFULLY)
     );
+
   } catch (error) {
     const status = error.response?.status || 500;
     console.error("[SIBS createAuth error]", status, error.response?.data);
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          {},
-          error.response?.data?.returnStatus?.statusMsg || error.message,
-        ),
-      );
+    return res.status(status).json(
+      new ApiResponse(status, {}, error.response?.data?.returnStatus?.statusMsg || error.message)
+    );
   }
 };
 
@@ -1552,7 +1640,6 @@ export const createAuthWithSavedCard = async (req, res) => {
 
     const merchantTransactionId = `auth_${Date.now()}`;
 
-    // 1. Create checkout with AUTH and saved token
     const checkoutPayload = {
       merchant: {
         terminalId: Number(process.env.SIBS_TERMINAL),
@@ -1595,7 +1682,6 @@ export const createAuthWithSavedCard = async (req, res) => {
     const transactionId = checkoutRes.data.transactionID;
     const transactionSignature = checkoutRes.data.transactionSignature;
 
-    // 2. Use OneClick card payment with token, no CVV
     const payUrl = `${process.env.SIBS_ROOT_URL}/api/v2/payments/${transactionId}/card/purchase`;
 
     const payPayload = {
